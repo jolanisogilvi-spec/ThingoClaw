@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="thingo-logo" data-name="Thingo logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28.19 27.07">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #086dfb;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 3px;
+      }
+    </style>
+  </defs>
+  <path class="cls-1" d="M4.18,5C13.23-.88,20.67,1.94,24.47,7.24c3.09,4.32,2.41,11.31-.89,15.14-1.85,2.14-5.01,3.69-7.71,2.69-1.06-.39-2.26-1.14-2.43-2.65-.07-.62.42-1.56-.23-3.72-.13-.42-.63-1.55-1.74-2.32-1.15-.79-2.47-.64-3.15-.55-3.78.46-6.17,4.55-6.55,5.23"/>
+  <path class="cls-1" d="M1.97,12.67s9.8-7.75,14.89-1.75c2.97,3.5,1.76,8.9-2.26,11.12-.12.07-.24.13-.37.2"/>
+</svg>

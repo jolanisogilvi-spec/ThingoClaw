@@ -1,0 +1,9 @@
+packages:
+  - '.'
+  - 'harness'
+
+ignoredBuiltDependencies:
+  - electron
+  - esbuild
+
+blockExoticSubdeps: false
