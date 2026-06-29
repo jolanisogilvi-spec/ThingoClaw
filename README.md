@@ -1,256 +1,278 @@
 # ThingoClaw
 
-ThingoClaw is a cross-platform AI agent desktop application built as a secondary development project on top of OpenClaw. It uses Electron, React, Vite, and TypeScript to combine agent chat, provider configuration, skills, scheduled jobs, messaging channels, diagnostics, and packaging-friendly runtime management into one desktop client.
+ThingoClaw 是一个基于 OpenClaw 二次开发的跨平台 AI Agent 桌面应用，使用 Electron、React、Vite 和 TypeScript 构建。它把 OpenClaw 的智能体、模型供应商、技能、定时任务、渠道和诊断能力整合到一个桌面客户端中，尽量减少命令行配置成本。
 
-> Note: ThingoClaw deeply integrates the OpenClaw runtime and adds desktop GUI, system integration, packaging, and runtime-management capabilities. Some internal engineering identifiers remain stable for configuration, upgrade, and OpenClaw runtime compatibility.
+> 说明：ThingoClaw 深度集成 OpenClaw runtime，并在桌面端补充图形界面、系统集成、打包分发和运行时管理能力。部分内部工程标识会保持稳定，用于兼容配置、升级和 OpenClaw 运行时逻辑。
 
-## Features
+## 核心功能
 
-- Guided first-run setup for language, providers, API keys, and OAuth-capable accounts.
-- Multi-provider AI configuration for OpenAI, Anthropic, Moonshot, Ollama, and custom OpenAI-compatible gateways.
-- Agent chat with Markdown, tables, math rendering, skill insertion, `@agent` routing, and multiple sessions.
-- Local-first skill management with bundled skills, workspace skills, managed directories, and extension-provided sources.
-- Cron automation for recurring and one-time tasks, including external channel delivery.
-- Channel management with multi-account binding for supported OpenClaw plugins.
-- Main-process-owned OpenClaw Gateway lifecycle management.
-- System integration for tray, startup launch, theme preference, update prompts, and secure credential storage.
-- Developer diagnostics including OpenClaw Doctor, proxy settings, and image-generation endpoint configuration.
+- 图形化首次设置向导：配置语言、模型供应商、API Key 或 OAuth 登录。
+- 多模型供应商管理：支持 OpenAI、Anthropic、Moonshot、Ollama、自定义 OpenAI-compatible 网关等。
+- 智能体聊天界面：支持 Markdown、表格、数学公式、技能插入、`@agent` 路由和多会话管理。
+- 技能系统：支持本地技能、预置技能、工作区技能和扩展提供的技能源。
+- 定时任务：通过 Cron 页面创建周期任务或一次性任务，可配置外部渠道投递。
+- 渠道管理：支持多个消息渠道和多账号绑定，包括企业微信、飞书、钉钉、QQ、Discord、WhatsApp、微信等插件能力。
+- OpenClaw Gateway 管理：桌面端自动启动、监控、重启 Gateway，并通过主进程统一代理通信。
+- 系统集成：托盘、开机启动、主题切换、自动更新提示、系统密钥链安全存储。
+- 开发者工具：提供 OpenClaw Doctor、诊断信息、代理设置、图像生成端点配置等高级能力。
 
-## Tech Stack
+## 技术栈
 
-| Layer | Technology |
+| 层级 | 技术 |
 | --- | --- |
-| Desktop runtime | Electron 40 |
-| UI | React 19 + TypeScript |
-| Build | Vite + electron-builder |
-| Styling | Tailwind CSS |
-| State | Zustand |
-| i18n | react-i18next |
-| Tests | Vitest + Playwright Electron |
-| Agent runtime | OpenClaw |
+| 桌面运行时 | Electron 40 |
+| 前端框架 | React 19 + TypeScript |
+| 构建工具 | Vite + electron-builder |
+| 样式系统 | Tailwind CSS + shadcn/ui 风格组件 |
+| 状态管理 | Zustand |
+| 国际化 | react-i18next |
+| 单元测试 | Vitest |
+| 端到端测试 | Playwright Electron |
+| Agent 运行时 | OpenClaw |
 
-## Project Layout
+## 项目结构
 
 ```text
 ThingoClaw/
-+-- electron/                 Electron main process, preload bridge, Gateway manager
-|   +-- main/                  app entry, windows, tray, menu, IPC registration
-|   +-- gateway/               OpenClaw Gateway lifecycle management
-|   +-- services/              typed host services for settings/providers/skills/etc.
-|   +-- preload/               secure renderer bridge
-|   +-- utils/                 paths, storage, auth, telemetry utilities
-+-- src/                      React renderer application
-|   +-- components/            reusable UI components
-|   +-- pages/                 Setup, Chat, Cron, Skills, Channels, Settings
-|   +-- stores/                Zustand stores
-|   +-- lib/                   host-api, api-client, frontend error model
-|   +-- assets/                renderer assets
-+-- shared/i18n/locales/      locale files
-+-- resources/                icons, binaries, packaging resources
-+-- scripts/                  build, download, packaging, patching scripts
-+-- tests/                    unit and Electron E2E tests
-+-- harness/                  spec-driven validation and communication checks
-+-- build/                    intermediate build output
-+-- dist/                     Vite renderer output
-+-- dist-electron/            Electron main/preload output
-+-- release/                  electron-builder output
++-- electron/                 Electron 主进程、预加载脚本、Gateway 管理和系统 API
+|   +-- main/                  应用入口、窗口、菜单、托盘、IPC 注册
+|   +-- gateway/               OpenClaw Gateway 生命周期管理
+|   +-- services/              设置、供应商、技能、诊断等 Host API 服务
+|   +-- preload/               Renderer 与 Main 的安全桥接
+|   +-- utils/                 路径、存储、认证、遥测等工具
++-- src/                      React Renderer 前端
+|   +-- components/            通用 UI 组件
+|   +-- pages/                 Setup、Chat、Cron、Skills、Channels、Settings 等页面
+|   +-- stores/                Zustand 状态
+|   +-- lib/                   host-api、api-client、错误模型等前端统一入口
+|   +-- assets/                前端静态资源
++-- shared/i18n/locales/      多语言文案资源
++-- resources/                图标、二进制资源、打包资源
++-- scripts/                  下载、构建、打包、图标生成和修补脚本
++-- tests/                    单元测试和 Electron E2E 测试
++-- harness/                  规格驱动测试和通信回归验证
++-- build/                    构建中间产物
++-- dist/                     Vite Renderer 构建输出
++-- dist-electron/            Electron Main/Preload 构建输出
++-- release/                  electron-builder 安装包输出
 ```
 
-## Runtime Flow
+## 运行流程
 
 ```text
-User launches ThingoClaw
+用户启动 ThingoClaw
     ↓
-Electron Main initializes app name, windows, tray, menu, settings, and system integration
+Electron Main 初始化应用名、窗口、托盘、菜单、配置和系统集成
     ↓
-Main starts or reconnects to the OpenClaw Gateway
+Main 启动或连接 OpenClaw Gateway，并维护 Gateway 生命周期
     ↓
-React Renderer loads the GUI and calls host-api/api-client
+React Renderer 加载页面，通过 host-api/api-client 发起请求
     ↓
-Requests cross the Electron IPC boundary
+Renderer 请求进入 Electron IPC
     ↓
-Main handles settings, files, skills, providers, sessions, diagnostics, and Gateway proxying
+Main 统一处理设置、文件、技能、供应商、会话、Gateway 代理等操作
     ↓
-OpenClaw Runtime executes agents, skills, channels, and model calls
+OpenClaw Runtime 执行 Agent、技能、渠道投递和模型调用
 ```
 
-Renderer code should not call Gateway HTTP endpoints directly and should not add new direct `window.electron.ipcRenderer.invoke(...)` calls. Use `src/lib/host-api.ts` and `src/lib/api-client.ts` as the frontend entry points.
+重要边界：
 
-## Requirements
+- Renderer 不直接请求 Gateway HTTP 地址。
+- Renderer 不直接新增 `window.electron.ipcRenderer.invoke(...)` 调用。
+- 前端统一通过 `src/lib/host-api.ts` 和 `src/lib/api-client.ts` 访问后端能力。
+- Gateway 通信策略由 Main 负责，避免 CORS、端口和环境差异问题。
 
-- Windows 10/11, macOS 11+, or a mainstream Linux distribution.
-- Node.js 22.19+.
-- pnpm pinned by `packageManager`, currently `pnpm@10.33.4`.
-- Git for fetching preinstalled skills during packaging.
-- Network access for downloading Electron, Node, uv, agent-browser, NSIS, and skill bundles.
+## 环境要求
 
-Enable Corepack first:
+- Windows 10/11、macOS 11+ 或主流 Linux 发行版。
+- Node.js 22.19+。
+- pnpm 使用 `package.json` 中 `packageManager` 固定的版本，当前为 `pnpm@10.33.4`。
+- Git，用于拉取预置 skills。
+- Windows 打包时需要网络访问，用于下载 Electron、Node、uv、agent-browser、NSIS 等构建资源。
 
-```bash
+建议先启用 Corepack：
+
+```powershell
 corepack enable
 corepack prepare pnpm@10.33.4 --activate
 ```
 
-## Install
+## 安装依赖
 
-```bash
+```powershell
 corepack pnpm@10.33.4 install
 ```
 
-Or run the project initializer:
+或使用项目初始化脚本：
 
-```bash
+```powershell
 corepack pnpm@10.33.4 run init
 ```
 
-## Download
+如果遇到 `@whiskeysockets/baileys` 的 exotic dependency 限制，项目已在 `.npmrc` 和 `pnpm-workspace.yaml` 中关闭 `blockExoticSubdeps`，正常重新安装即可。
 
-Windows users can download the latest installer from GitHub Releases:
+## 下载安装包
 
-[Download the latest ThingoClaw release](https://github.com/jolanisogilvi-spec/ThingoClaw/releases/latest)
+Windows 用户可以从 GitHub Releases 下载最新安装包：
 
-The Windows installer file name follows this pattern:
+[下载 ThingoClaw 最新版](https://github.com/jolanisogilvi-spec/ThingoClaw/releases/latest)
+
+当前 Windows 安装包文件名格式为：
 
 ```text
 ThingoClaw-<version>-win-x64.exe
 ```
 
-Download the `.exe` file and run the installer.
+下载后双击 `.exe` 文件，根据安装向导完成安装即可。
 
-## Development
+## 本地开发
 
-```bash
+```powershell
 corepack pnpm@10.33.4 dev
 ```
 
-The OpenClaw Gateway listens on `127.0.0.1:18789` by default. Gateway readiness can take 10 to 30 seconds on first startup. The UI remains navigable while the Gateway is connecting.
+开发模式会启动 Vite 和 Electron。OpenClaw Gateway 默认监听 `127.0.0.1:18789`，首次启动可能需要 10 到 30 秒。Gateway 未就绪时界面仍可导航，只会显示连接状态。
 
-## Commands
+## 常用命令
 
-| Task | Command |
+| 任务 | 命令 |
 | --- | --- |
-| Install deps and bundled basics | `corepack pnpm@10.33.4 run init` |
-| Start development app | `corepack pnpm@10.33.4 dev` |
-| Generate extension bridge | `corepack pnpm@10.33.4 run ext:bridge` |
-| Build renderer and Electron bundles | `corepack pnpm@10.33.4 run build:vite` |
-| Type check | `corepack pnpm@10.33.4 run typecheck` |
-| Unit tests | `corepack pnpm@10.33.4 test` |
-| E2E tests | `corepack pnpm@10.33.4 run test:e2e` |
-| Prepare current-platform package assets | `corepack pnpm@10.33.4 package` |
-| Windows installer | `corepack pnpm@10.33.4 package:win` |
-| macOS package | `corepack pnpm@10.33.4 package:mac` |
-| Linux package | `corepack pnpm@10.33.4 package:linux` |
+| 安装依赖并下载基础资源 | `corepack pnpm@10.33.4 run init` |
+| 启动开发环境 | `corepack pnpm@10.33.4 dev` |
+| 生成扩展桥接文件 | `corepack pnpm@10.33.4 run ext:bridge` |
+| 前端和 Electron 构建 | `corepack pnpm@10.33.4 run build:vite` |
+| 类型检查 | `corepack pnpm@10.33.4 run typecheck` |
+| 单元测试 | `corepack pnpm@10.33.4 test` |
+| E2E 测试 | `corepack pnpm@10.33.4 run test:e2e` |
+| 当前平台预打包资源 | `corepack pnpm@10.33.4 package` |
+| Windows 安装包 | `corepack pnpm@10.33.4 package:win` |
+| macOS 安装包 | `corepack pnpm@10.33.4 package:mac` |
+| Linux 安装包 | `corepack pnpm@10.33.4 package:linux` |
 
-## Windows Packaging
+## Windows 打包
 
-Run this from PowerShell:
+在 Windows PowerShell 中运行：
 
 ```powershell
 corepack pnpm@10.33.4 package:win
 ```
 
-The Windows packaging flow:
+该命令会执行：
 
-1. Downloads bundled Windows binaries for `uv`, `agent-browser`, and `node.exe`.
-2. Generates the extension bridge.
-3. Builds the React renderer and Electron main/preload bundles.
-4. Bundles OpenClaw.
-5. Bundles OpenClaw plugin mirrors.
-6. Fetches and bundles preinstalled skills.
-7. Patches NSIS installer templates.
-8. Runs electron-builder for Windows.
+1. 下载 Windows 版 `uv`、`agent-browser`、内置 `node.exe`。
+2. 生成扩展桥接文件。
+3. 构建 React Renderer 和 Electron Main/Preload。
+4. 打包 OpenClaw runtime。
+5. 打包 OpenClaw 插件镜像。
+6. 拉取并打包预置 skills。
+7. 修补 NSIS 安装脚本。
+8. 使用 electron-builder 生成 Windows 安装包。
 
-Primary outputs:
+成功后主要产物位于：
 
 ```text
 release/ThingoClaw-0.4.12-win-x64.exe
 release/win-unpacked/ThingoClaw.exe
 ```
 
-## Troubleshooting
+当前已验证生成的安装包：
 
-### Exotic subdependency install errors
+```text
+release/ThingoClaw-0.4.12-win-x64.exe
+```
 
-If pnpm fails with an exotic subdependency error from Baileys/libsignal, this project already sets:
+## 打包问题排查
+
+### 1. `blockExoticSubdeps` 导致安装依赖失败
+
+错误示例：
+
+```text
+ERR_PNPM_EXOTIC_SUBDEP Exotic dependency "libsignal" ... not allowed
+```
+
+处理方式：项目已配置：
 
 ```ini
 block-exotic-subdeps=false
 ```
 
-and:
+以及：
 
 ```yaml
 blockExoticSubdeps: false
 ```
 
-Re-run:
+重新执行：
 
-```bash
+```powershell
 corepack pnpm@10.33.4 install
 ```
 
-### Missing `bsdtar` on Windows
+### 2. Windows 没有 `bsdtar`
 
-The preinstalled-skill bundler now uses the Node `tar` package and no longer depends on system `bsdtar`.
+早期脚本在打包预置 skills 时会调用 `bsdtar`，Windows 环境可能不存在该命令。当前脚本已改为使用 Node `tar` 包解压，不再依赖系统 `bsdtar`。
 
-You can validate that step directly:
+可单独验证：
 
-```bash
+```powershell
 corepack pnpm@10.33.4 exec zx scripts/bundle-preinstalled-skills.mjs
 ```
 
-### Gateway port conflicts
+### 3. Gateway 端口被占用
 
-The Gateway default listener is `127.0.0.1:18789`.
-
-Windows:
+OpenClaw Gateway 默认监听 `127.0.0.1:18789`。Windows 可用以下命令查看：
 
 ```powershell
 Get-NetTCPConnection -LocalPort 18789 -State Listen
 ```
 
-macOS/Linux:
+### 4. Electron 多进程属于正常现象
 
-```bash
-lsof -nP -iTCP:18789 -sTCP:LISTEN
-```
+一个 Electron 应用会出现多个系统进程，包括 main、renderer、utility、zygote 等。这不是重复启动。完整退出请使用托盘菜单中的 Quit ThingoClaw。
 
-### Electron process count
+## 配置与数据
 
-One Electron app instance normally appears as multiple OS processes. Use the tray menu item `Quit ThingoClaw` for a complete shutdown.
+- 应用配置：使用 `electron-store` 和系统用户目录。
+- 密钥：使用操作系统原生安全存储或密钥链。
+- OpenClaw 配置：默认使用本地 OpenClaw 配置目录。
+- 会话历史：读取 OpenClaw session transcript `.jsonl` 文件。
+- 技能目录：默认托管在 OpenClaw skills 目录，也支持 workspace 和额外 skill dirs。
 
-## Project Positioning
+## 项目定位
 
-ThingoClaw is intended for desktop scenarios that need a graphical OpenClaw experience. It focuses on:
+ThingoClaw 面向需要图形化使用 OpenClaw 的桌面场景，重点提供：
 
-- Desktop packaging around the OpenClaw runtime.
-- A unified GUI for providers, skills, channels, scheduled jobs, and diagnostics.
-- Windows, macOS, and Linux application distribution.
-- A secondary-development base for local or enterprise OpenClaw deployments.
-- Local Thingo logo resources for application icons and interface identity.
+- OpenClaw runtime 的桌面化封装。
+- 模型供应商、技能、渠道、定时任务的统一 GUI。
+- Windows、macOS、Linux 的桌面应用打包能力。
+- 面向企业或本地部署场景的二次开发基础。
+- 使用本地化 Thingo logo 资源作为应用图标和界面标识。
 
-The following internal engineering identifiers remain stable for compatibility:
+为保证二次开发后的稳定性和兼容性，以下内部工程标识保持不变：
 
 - `package.json.name: "clawx"`
 - `appId: app.clawx.desktop`
-- `.clawx` data directory
-- `CLAWX_*` environment variables
+- `.clawx` 数据目录
+- `CLAWX_*` 环境变量
 - `clawx-openai-image` provider/plugin key
 - `OPENCLAW_EMBEDDED_IN: 'ClawX'`
 - OpenClaw workspace marker
 
-## Development Rules
+## 开发规范
 
-- Route user-facing text through i18n with `en`, `zh`, `ja`, and `ru` coverage.
-- Renderer backend access must go through `host-api` / `api-client`.
-- UI changes should include or update Electron E2E coverage.
-- Communication-path changes should run:
+- 用户可见文案必须走 i18n，覆盖 `en`、`zh`、`ja`、`ru`。
+- UI 变更应同步或新增 Electron E2E 测试。
+- Renderer 侧后端访问必须通过 `host-api` / `api-client`。
+- 通信链路变更需要运行：
 
-```bash
+```powershell
 corepack pnpm@10.33.4 run comms:replay
 corepack pnpm@10.33.4 run comms:compare
 ```
 
-## License
+- 功能或架构变化后，应检查并同步 README 文档。
 
-MIT License.
+## 许可证
+
+本项目基于 MIT License 发布。
