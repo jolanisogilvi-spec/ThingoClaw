@@ -20,6 +20,29 @@ async function seedTestProvider(page: Parameters<typeof completeSetup>[0]): Prom
 }
 
 test.describe('ClawX provider lifecycle', () => {
+  test('shows Thingo first and only asks for API key and model id', async ({ page }) => {
+    await completeSetup(page);
+
+    await page.getByTestId('sidebar-nav-models').click();
+    await expect(page.getByTestId('providers-settings')).toBeVisible();
+
+    await page.getByTestId('providers-add-button').click();
+    await expect(page.getByTestId('add-provider-dialog')).toBeVisible();
+    await expect(page.locator('[data-testid^="add-provider-type-"]').first()).toHaveAttribute(
+      'data-testid',
+      'add-provider-type-thingo',
+    );
+
+    await page.getByTestId('add-provider-type-thingo').click();
+    await expect(page.getByText('Thingo 大模型聚合平台')).toBeVisible();
+    await expect(page.getByTestId('add-provider-api-key-input')).toBeVisible();
+    await expect(page.getByTestId('add-provider-model-id-input')).toBeVisible();
+    await expect(page.getByTestId('add-provider-base-url-input')).toHaveCount(0);
+    await expect(page.getByText('Protocol')).toHaveCount(0);
+    await expect(page.getByTestId('add-provider-auth-oauth-tab')).toHaveCount(0);
+    await expect(page.getByTestId('add-provider-auth-apikey-tab')).toHaveCount(0);
+  });
+
   test('promotes a remaining provider after deleting the default provider', async ({ page }) => {
     await completeSetup(page);
 

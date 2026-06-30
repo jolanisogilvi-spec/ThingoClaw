@@ -7,6 +7,26 @@ import type {
 
 export const PROVIDER_DEFINITIONS: ProviderDefinition[] = [
   {
+    id: 'thingo',
+    name: 'Thingo 大模型聚合平台',
+    icon: 'T',
+    placeholder: 'sk-...',
+    model: 'Multi-Model',
+    requiresApiKey: true,
+    showModelId: true,
+    modelIdPlaceholder: 'model-id',
+    category: 'compatible',
+    envVar: 'THINGO_API_KEY',
+    supportedAuthModes: ['api_key'],
+    defaultAuthMode: 'api_key',
+    supportsMultipleAccounts: true,
+    providerConfig: {
+      baseUrl: 'https://uniapi.thingo.com.cn/v1',
+      api: 'openai-completions',
+      apiKeyEnv: 'THINGO_API_KEY',
+    },
+  },
+  {
     id: 'anthropic',
     name: 'Anthropic',
     icon: '🤖',

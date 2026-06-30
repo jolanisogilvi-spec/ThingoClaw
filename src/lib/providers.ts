@@ -7,6 +7,7 @@
  */
 
 export const PROVIDER_TYPES = [
+  'thingo',
   'anthropic',
   'openai',
   'google',
@@ -36,6 +37,7 @@ export type ProviderProtocol =
   | 'azure-openai-responses';
 
 export const BUILTIN_PROVIDER_TYPES = [
+  'thingo',
   'anthropic',
   'openai',
   'google',
@@ -147,6 +149,16 @@ import { providerIcons } from '@/assets/providers';
 
 /** All supported provider types with UI metadata */
 export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
+  {
+    id: 'thingo',
+    name: 'Thingo 大模型聚合平台',
+    icon: 'T',
+    placeholder: 'sk-...',
+    model: 'Multi-Model',
+    requiresApiKey: true,
+    showModelId: true,
+    modelIdPlaceholder: 'model-id',
+  },
   {
     id: 'anthropic',
     name: 'Anthropic',
