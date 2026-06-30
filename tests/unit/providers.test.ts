@@ -16,6 +16,26 @@ import {
 } from '@electron/utils/provider-registry';
 
 describe('provider metadata', () => {
+  it('puts Thingo first and configures it as an OpenAI-compatible aggregation provider', () => {
+    expect(PROVIDER_TYPES[0]).toBe('thingo');
+    expect(BUILTIN_PROVIDER_TYPES[0]).toBe('thingo');
+    expect(PROVIDER_TYPE_INFO[0]).toMatchObject({
+      id: 'thingo',
+      name: 'Thingo 大模型聚合平台',
+      requiresApiKey: true,
+      showModelId: true,
+      modelIdPlaceholder: 'model-id',
+    });
+    expect(PROVIDER_TYPE_INFO[0].showBaseUrl).toBeUndefined();
+    expect(PROVIDER_TYPE_INFO[0].isOAuth).toBeUndefined();
+    expect(getProviderEnvVar('thingo')).toBe('THINGO_API_KEY');
+    expect(getProviderConfig('thingo')).toEqual({
+      baseUrl: 'https://uniapi.thingo.com.cn/v1',
+      api: 'openai-completions',
+      apiKeyEnv: 'THINGO_API_KEY',
+    });
+  });
+
   it('includes ark in the frontend provider registry', () => {
     expect(PROVIDER_TYPES).toContain('ark');
 
@@ -59,7 +79,7 @@ describe('provider metadata', () => {
 
   it('keeps builtin provider sources in sync', () => {
     expect(BUILTIN_PROVIDER_TYPES).toEqual(
-      expect.arrayContaining(['anthropic', 'openai', 'google', 'openrouter', 'ark', 'moonshot', 'siliconflow', 'minimax-portal', 'minimax-portal-cn', 'modelstudio', 'ollama'])
+      expect.arrayContaining(['thingo', 'anthropic', 'openai', 'google', 'openrouter', 'ark', 'moonshot', 'siliconflow', 'minimax-portal', 'minimax-portal-cn', 'modelstudio', 'ollama'])
     );
   });
 

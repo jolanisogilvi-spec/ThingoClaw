@@ -247,6 +247,7 @@ export type AgentChannelPayload = { id: string; channelType: string };
 export type DiagnosticsGatewaySnapshotResult = JsonRecord;
 
 export type ProviderType =
+  | 'thingo'
   | 'anthropic'
   | 'openai'
   | 'google'

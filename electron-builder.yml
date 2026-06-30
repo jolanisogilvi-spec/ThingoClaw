@@ -1,4 +1,4 @@
-appId: app.clawx.desktop
+appId: app.thingoclaw.desktop
 productName: ThingoClaw
 copyright: Copyright © 2026 ThingoClaw
 compression: maximum
@@ -114,6 +114,7 @@ win:
   # Skip update signature verification: we ship via OSS + GitHub without a
   # code-signing certificate, so verifying would always fail on the updater.
   verifyUpdateCodeSignature: false
+  requestedExecutionLevel: requireAdministrator
   extraResources:
     - from: resources/bin/win32-${arch}
       to: bin
@@ -126,7 +127,8 @@ win:
 
 nsis:
   oneClick: false
-  perMachine: false
+  perMachine: true
+  allowElevation: true
   warningsAsErrors: false
   allowToChangeInstallationDirectory: true
   deleteAppDataOnUninstall: false
