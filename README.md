@@ -36,18 +36,6 @@ ThingoClaw 是一个 Electron 桌面应用，用图形化界面承载 OpenClaw A
 
 Windows 安装包以管理员权限安装。构建配置使用 `requireAdministrator` 和 NSIS per-machine 安装，适合需要写入系统安装目录或注册桌面入口的场景。
 
-## 界面预览
-
-<p align="center">
-  <img src="./resources/screenshot/zh/chat.png" alt="ThingoClaw 对话界面" width="49%" />
-  <img src="./resources/screenshot/zh/models.png" alt="ThingoClaw 模型配置" width="49%" />
-</p>
-
-<p align="center">
-  <img src="./resources/screenshot/zh/settings.png" alt="ThingoClaw 设置页面" width="49%" />
-  <img src="./resources/screenshot/zh/skills.png" alt="ThingoClaw 技能管理" width="49%" />
-</p>
-
 ## 核心能力
 
 - 桌面化 OpenClaw：通过 Electron、React、Vite 和 TypeScript 提供本地 GUI。
