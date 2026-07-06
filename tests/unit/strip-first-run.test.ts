@@ -243,6 +243,14 @@ describe('ensureClawXIdentityFile', () => {
     expect(migrated).toContain('ThingoClaw');
     expect(migrated).not.toContain('- **Name:** ClawX');
 
+    await writeFile(
+      join(workspaceDir, 'IDENTITY.md'),
+      legacyIdentity.replace('- **Emoji:** 棣冩儱', '- **Emoji:** 馃惥'),
+      'utf-8',
+    );
+    await ensureClawXIdentityFile(workspaceDir);
+    await expect(readFile(join(workspaceDir, 'IDENTITY.md'), 'utf-8')).resolves.toContain('ThingoClaw');
+
     await writeFile(join(workspaceDir, 'IDENTITY.md'), '# IDENTITY.md\n\n- **Name:** ClawX Custom\n', 'utf-8');
     await ensureClawXIdentityFile(workspaceDir);
     await expect(readFile(join(workspaceDir, 'IDENTITY.md'), 'utf-8')).resolves.toBe('# IDENTITY.md\n\n- **Name:** ClawX Custom\n');

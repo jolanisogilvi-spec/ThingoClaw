@@ -35,7 +35,7 @@ export function buildDefaultClawXIdentityContent(): string {
     '- **Name:** ThingoClaw',
     '- **Creature:** desktop AI assistant',
     '- **Vibe:** concise, capable, and practical',
-    '- **Emoji:** 🐾',
+    '- **Emoji:**',
     '- **Avatar:**',
     '',
     'ThingoClaw uses a default desktop identity instead of chat-first bootstrap.',
@@ -56,6 +56,19 @@ export function buildLegacyDefaultClawXIdentityContent(): string {
     'ClawX uses a default desktop identity instead of chat-first bootstrap.',
     '',
   ].join('\n');
+}
+
+export function isLegacyGeneratedClawXIdentityContent(content: string): boolean {
+  const lines = content.replace(/\r\n/g, '\n').split('\n').map((line) => line.trim());
+  const nonEmptyLines = lines.filter(Boolean);
+  return nonEmptyLines.length === 7
+    && nonEmptyLines[0] === '# IDENTITY.md - ClawX'
+    && nonEmptyLines[1] === '- **Name:** ClawX'
+    && nonEmptyLines[2] === '- **Creature:** desktop AI assistant'
+    && nonEmptyLines[3] === '- **Vibe:** concise, capable, and practical'
+    && nonEmptyLines[4].startsWith('- **Emoji:**')
+    && nonEmptyLines[5] === '- **Avatar:**'
+    && nonEmptyLines[6] === 'ClawX uses a default desktop identity instead of chat-first bootstrap.';
 }
 
 export function isOpenClawIdentityTemplate(content: string): boolean {
@@ -109,6 +122,7 @@ export async function ensureClawXIdentityFile(
     if (
       (isOpenClawIdentityTemplate(existing) && existing !== defaultIdentity)
       || normalizedExisting === buildLegacyDefaultClawXIdentityContent()
+      || isLegacyGeneratedClawXIdentityContent(existing)
     ) {
       await writeFile(identityPath, defaultIdentity, 'utf-8');
       wroteIdentity = true;
