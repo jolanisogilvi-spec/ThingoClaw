@@ -1,4 +1,6 @@
 export const PROVIDER_TYPES = [
+  'thingo-cn',
+  'thingo-global',
   'thingo',
   'anthropic',
   'openai',
@@ -17,6 +19,8 @@ export const PROVIDER_TYPES = [
 ] as const;
 
 export const BUILTIN_PROVIDER_TYPES = [
+  'thingo-cn',
+  'thingo-global',
   'thingo',
   'anthropic',
   'openai',
@@ -108,6 +112,8 @@ export type ProviderVendorCategory =
   | 'local'
   | 'custom';
 
+export type ProviderGroup = 'domestic' | 'international';
+
 export interface ProviderConfig {
   id: string;
   name: string;
@@ -147,6 +153,8 @@ export interface ProviderTypeInfo {
   codePlanPresetBaseUrl?: string;
   codePlanPresetModelId?: string;
   codePlanDocsUrl?: string;
+  group?: ProviderGroup;
+  hidden?: boolean;
 }
 
 export interface ProviderModelEntry extends Record<string, unknown> {

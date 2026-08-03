@@ -1,7 +1,7 @@
 import { expect, test, completeSetup } from './fixtures/electron';
 
-test.describe('ClawX update notifications', () => {
-  test('prompts when a new version is available', async ({ electronApp, page }) => {
+test.describe('update channel', () => {
+  test('does not show update notifications when the update channel is disabled', async ({ electronApp, page }) => {
     await completeSetup(page);
 
     await electronApp.evaluate(() => {
@@ -16,7 +16,11 @@ test.describe('ClawX update notifications', () => {
       });
     });
 
-    await expect(page.getByText(/9\.9\.9/)).toBeVisible();
-    await expect(page.getByRole('button', { name: /Download|下载|ダウンロード|Скачать/i })).toBeVisible();
+    await expect(page.getByText(/9\.9\.9/)).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /Download|下载|ダウンロード|Скачать/i })).toHaveCount(0);
+
+    await page.getByTestId('sidebar-nav-settings').click();
+    await expect(page.getByTestId('settings-page')).toBeVisible();
+    await expect(page.getByTestId('updates-settings-section')).toHaveCount(0);
   });
 });

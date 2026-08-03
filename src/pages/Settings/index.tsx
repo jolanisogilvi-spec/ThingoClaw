@@ -36,6 +36,7 @@ import { SUPPORTED_LANGUAGES } from '@/i18n';
 import { hostApi, type OpenClawDoctorResult } from '@/lib/host-api';
 import { hostEvents } from '@/lib/host-events';
 import { cn } from '@/lib/utils';
+import { APP_UPDATES_ENABLED } from '@shared/update-config';
 type ControlUiInfo = {
   url: string;
   token: string;
@@ -971,30 +972,34 @@ export function Settings() {
 
           <Separator className="bg-black/5 dark:bg-white/5" />
 
-          {/* Updates */}
-          <div>
-            <h2 className="text-3xl font-serif text-foreground mb-6 font-normal tracking-tight">
-              {t('updates.title')}
-            </h2>
-            <div className="space-y-6">
-              <UpdateSettings />
+          {APP_UPDATES_ENABLED && (
+            <>
+              {/* Updates */}
+              <div data-testid="updates-settings-section">
+                <h2 className="text-3xl font-serif text-foreground mb-6 font-normal tracking-tight">
+                  {t('updates.title')}
+                </h2>
+                <div className="space-y-6">
+                  <UpdateSettings />
 
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-sm font-medium text-foreground">{t('updates.autoCheck')}</Label>
-                  <p className="text-meta text-muted-foreground mt-1">
-                    {t('updates.autoCheckDesc')}
-                  </p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-sm font-medium text-foreground">{t('updates.autoCheck')}</Label>
+                      <p className="text-meta text-muted-foreground mt-1">
+                        {t('updates.autoCheckDesc')}
+                      </p>
+                    </div>
+                    <Switch
+                      checked={autoCheckUpdate}
+                      onCheckedChange={setAutoCheckUpdate}
+                    />
+                  </div>
                 </div>
-                <Switch
-                  checked={autoCheckUpdate}
-                  onCheckedChange={setAutoCheckUpdate}
-                />
               </div>
-            </div>
-          </div>
 
-          <Separator className="bg-black/5 dark:bg-white/5" />
+              <Separator className="bg-black/5 dark:bg-white/5" />
+            </>
+          )}
 
           {/* About */}
           <div>

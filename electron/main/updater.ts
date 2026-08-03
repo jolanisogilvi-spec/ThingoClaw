@@ -10,6 +10,9 @@ import { BrowserWindow, app, ipcMain } from 'electron';
 import { logger } from '../utils/logger';
 import { EventEmitter } from 'events';
 import { setQuitting } from './app-state';
+import { APP_UPDATES_ENABLED } from '../../shared/update-config';
+
+export { APP_UPDATES_ENABLED } from '../../shared/update-config';
 
 export interface UpdateStatus {
   status: 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error';
@@ -52,6 +55,11 @@ export class AppUpdater extends EventEmitter {
     
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = false;
+
+    if (!APP_UPDATES_ENABLED) {
+      logger.info('[Updater] Update channel disabled by application configuration.');
+      return;
+    }
     
     autoUpdater.logger = {
       info: (msg: string) => logger.info('[Updater]', msg),
@@ -156,6 +164,10 @@ export class AppUpdater extends EventEmitter {
    * final status so the UI never gets stuck in 'checking'.
    */
   async checkForUpdates(): Promise<UpdateInfo | null> {
+    if (!APP_UPDATES_ENABLED) {
+      return null;
+    }
+
     try {
       const result = await autoUpdater.checkForUpdates();
 
@@ -187,6 +199,10 @@ export class AppUpdater extends EventEmitter {
    * Download available update
    */
   async downloadUpdate(): Promise<void> {
+    if (!APP_UPDATES_ENABLED) {
+      return;
+    }
+
     try {
       await autoUpdater.downloadUpdate();
     } catch (error) {
@@ -207,6 +223,10 @@ export class AppUpdater extends EventEmitter {
    * the window cleanly while ShipIt runs independently to replace the app.
    */
   quitAndInstall(): void {
+    if (!APP_UPDATES_ENABLED) {
+      return;
+    }
+
     logger.info('[Updater] quitAndInstall called');
     setQuitting();
     autoUpdater.quitAndInstall();
@@ -217,6 +237,10 @@ export class AppUpdater extends EventEmitter {
    * Sends `update:auto-install-countdown` events to the renderer each second.
    */
   startAutoInstallCountdown(): void {
+    if (!APP_UPDATES_ENABLED) {
+      return;
+    }
+
     this.clearAutoInstallTimer();
     this.autoInstallCountdown = AppUpdater.AUTO_INSTALL_DELAY_SECONDS;
     this.sendToRenderer('update:auto-install-countdown', { seconds: this.autoInstallCountdown });
@@ -233,6 +257,10 @@ export class AppUpdater extends EventEmitter {
   }
 
   cancelAutoInstall(): void {
+    if (!APP_UPDATES_ENABLED) {
+      return;
+    }
+
     this.clearAutoInstallTimer();
     this.sendToRenderer('update:auto-install-countdown', { seconds: -1, cancelled: true });
   }
@@ -248,6 +276,10 @@ export class AppUpdater extends EventEmitter {
    * Set update channel (stable, beta, dev)
    */
   setChannel(channel: 'stable' | 'beta' | 'dev'): void {
+    if (!APP_UPDATES_ENABLED) {
+      return;
+    }
+
     autoUpdater.channel = channel;
   }
 

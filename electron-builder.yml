@@ -128,7 +128,10 @@ nsis:
   allowElevation: true
   allowToChangeInstallationDirectory: true
   deleteAppDataOnUninstall: false
-  differentialPackage: true
+  # Ship a self-contained installer. Keeping the app payload embedded in the
+  # NSIS executable avoids producing a tiny bootstrapper that does nothing when
+  # the companion .nsis.7z file is not copied alongside it.
+  differentialPackage: false
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: ThingoClaw

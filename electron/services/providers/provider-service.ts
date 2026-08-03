@@ -62,6 +62,38 @@ function logLegacyProviderApiUsage(method: string, replacement: string): void {
   );
 }
 
+async function migrateLegacyThingoStoreAccounts(
+  accounts: ProviderAccount[],
+  visibleAccounts: ProviderAccount[],
+): Promise<void> {
+  const legacyAccounts = accounts.filter((account) => account.vendorId === 'thingo' || account.id === 'thingo');
+  if (legacyAccounts.length === 0) return;
+
+  const sourceAccount = [...legacyAccounts].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0];
+  const legacyApiKey = await getApiKey(sourceAccount.id);
+  const targetIds = ['thingo-cn', 'thingo-global'];
+
+  if (legacyApiKey) {
+    for (const targetId of targetIds) {
+      if (visibleAccounts.some((account) => account.id === targetId)) {
+        await storeApiKey(targetId, legacyApiKey);
+      }
+    }
+  }
+
+  const currentDefaultId = await getDefaultProviderAccountId();
+  for (const account of legacyAccounts) {
+    await deleteProviderAccount(account.id);
+    await deleteApiKey(account.id);
+  }
+
+  if (currentDefaultId && legacyAccounts.some((account) => account.id === currentDefaultId)) {
+    if (visibleAccounts.some((account) => account.id === 'thingo-cn')) {
+      await setDefaultProviderAccount('thingo-cn');
+    }
+  }
+}
+
 function inferProviderVendorIdFromOpenClawEntry(
   key: string,
   entry: Record<string, unknown>,
@@ -248,6 +280,8 @@ export class ProviderService {
         }
       }
     }
+
+    await migrateLegacyThingoStoreAccounts(allStoreAccounts, result);
 
     return result;
   }

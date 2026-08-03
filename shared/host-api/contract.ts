@@ -247,6 +247,8 @@ export type AgentChannelPayload = { id: string; channelType: string };
 export type DiagnosticsGatewaySnapshotResult = JsonRecord;
 
 export type ProviderType =
+  | 'thingo-cn'
+  | 'thingo-global'
   | 'thingo'
   | 'anthropic'
   | 'openai'
@@ -264,6 +266,7 @@ export type ProviderType =
   | 'custom';
 export type ProviderAuthMode = 'api_key' | 'oauth_device' | 'oauth_browser' | 'local';
 export type ProviderVendorCategory = 'official' | 'compatible' | 'local' | 'custom';
+export type ProviderGroup = 'domestic' | 'international';
 export type ProviderProtocol =
   | 'openai-completions'
   | 'openai-responses'
@@ -313,6 +316,7 @@ export type ProviderVendorInfo = {
   codePlanPresetBaseUrl?: string;
   codePlanPresetModelId?: string;
   codePlanDocsUrl?: string;
+  group?: ProviderGroup;
   hidden?: boolean;
   hideOAuthUi?: boolean;
   category: ProviderVendorCategory;

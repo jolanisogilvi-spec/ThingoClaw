@@ -16,6 +16,10 @@
   "aiProviders": {
     "title": "AI プロバイダー",
     "description": "AI モデルプロバイダーと API キーを設定",
+    "groups": {
+      "domestic": "Thingo 国内モデル",
+      "international": "Thingo 海外モデル"
+    },
     "overview": {
       "title": "プロバイダーアカウント",
       "description": "現在設定されているプロバイダーアカウントとモデルの概要です。",

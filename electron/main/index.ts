@@ -50,6 +50,7 @@ import { ensureBuiltinSkillsInstalled, ensurePreinstalledSkillsInstalled, trimBu
 import { deviceOAuthManager } from '../utils/device-oauth';
 import { browserOAuthManager } from '../utils/browser-oauth';
 import { whatsAppLoginManager } from '../utils/whatsapp-login';
+import { ensureThingoProviderGroups } from '../utils/openclaw-auth';
 import { syncAllProviderAuthToRuntime } from '../services/providers/provider-runtime-sync';
 
 const WINDOWS_APP_USER_MODEL_ID = 'app.clawx.desktop';
@@ -379,11 +380,10 @@ async function initialize(): Promise<void> {
     clawHubService.setMarketplaceProvider(marketplaceProvider);
   }
 
-  // Register update handlers
+  // Register legacy update handlers for API compatibility. The shared update
+  // feature flag currently disables all checks, downloads, installs, and UI
+  // notifications.
   registerUpdateHandlers(appUpdater, window);
-
-  // Note: Auto-check for updates is driven by the renderer (update store init)
-  // so it respects the user's "Auto-check for updates" setting.
 
   // Seed a stable default IDENTITY.md before the Gateway initializes the
   // workspace so ClawX desktop sessions skip OpenClaw's chat-first bootstrap.
@@ -522,6 +522,7 @@ async function initialize(): Promise<void> {
   const gatewayAutoStart = await getSetting('gatewayAutoStart');
   if (!isE2EMode && gatewayAutoStart) {
     try {
+      await ensureThingoProviderGroups();
       await syncAllProviderAuthToRuntime();
       logger.debug('Auto-starting Gateway...');
       await gatewayManager.start();

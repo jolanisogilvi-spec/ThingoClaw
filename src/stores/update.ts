@@ -6,6 +6,7 @@ import { create } from 'zustand';
 import { useSettingsStore } from './settings';
 import { hostApi } from '@/lib/host-api';
 import { hostEvents } from '@/lib/host-events';
+import { APP_UPDATES_ENABLED } from '@shared/update-config';
 import type {
   UpdateChannel,
   UpdateInfoSnapshot,
@@ -91,15 +92,19 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
         set({ autoInstallCountdown: cancelled ? null : seconds });
       });
 
-      // New default is prompt-first: never auto-download/install unless the
-      // user explicitly chooses Download from the notification or Settings.
-      void hostApi.updates.setAutoDownload(false).catch(() => {});
+      // Keep legacy IPC compatibility when updates are enabled. With the
+      // channel disabled, do not make any updater calls at all.
+      if (APP_UPDATES_ENABLED) {
+        void hostApi.updates.setAutoDownload(false).catch(() => {});
+      }
 
       set({ isInitialized: true });
 
-      // Auto-check for updates on startup (respects user toggle)
+      // Auto-check for updates on startup (respects user toggle). The entire
+      // update channel can be disabled at build/runtime level, in which case
+      // stale persisted preferences must be ignored.
       const autoCheckUpdate = useSettingsStore.getState().autoCheckUpdate;
-      if (autoCheckUpdate) {
+      if (APP_UPDATES_ENABLED && autoCheckUpdate) {
         setTimeout(() => {
           get().checkForUpdates().catch(() => {});
         }, 10000);
@@ -116,6 +121,11 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   },
 
   checkForUpdates: async () => {
+    if (!APP_UPDATES_ENABLED) {
+      set({ status: 'not-available', error: null });
+      return;
+    }
+
     set({ status: 'checking', error: null });
     
     try {
@@ -147,6 +157,10 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   },
 
   downloadUpdate: async () => {
+    if (!APP_UPDATES_ENABLED) {
+      return;
+    }
+
     set({ status: 'downloading', error: null });
     
     try {
@@ -161,10 +175,18 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   },
 
   installUpdate: () => {
+    if (!APP_UPDATES_ENABLED) {
+      return;
+    }
+
     void hostApi.updates.install();
   },
 
   cancelAutoInstall: async () => {
+    if (!APP_UPDATES_ENABLED) {
+      return;
+    }
+
     try {
       await hostApi.updates.cancelAutoInstall();
     } catch (error) {
@@ -173,6 +195,10 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   },
 
   setChannel: async (channel) => {
+    if (!APP_UPDATES_ENABLED) {
+      return;
+    }
+
     try {
       await hostApi.updates.setChannel(channel);
     } catch (error) {
@@ -181,6 +207,10 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   },
 
   setAutoDownload: async (enable) => {
+    if (!APP_UPDATES_ENABLED) {
+      return;
+    }
+
     try {
       // Compatibility shim for older UI paths: the updater is now prompt-first,
       // so we keep electron-updater.autoDownload disabled even if a stale

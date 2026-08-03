@@ -16,6 +16,10 @@
   "aiProviders": {
     "title": "AI-провайдеры",
     "description": "Настройте провайдеров AI-моделей и API-ключи",
+    "groups": {
+      "domestic": "Внутренние модели Thingo",
+      "international": "Зарубежные модели Thingo"
+    },
     "overview": {
       "title": "Учётные записи провайдеров",
       "description": "Сводка об учётных записях провайдеров и моделях.",

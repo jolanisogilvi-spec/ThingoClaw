@@ -27,12 +27,12 @@ ThingoClaw 是一个 Electron 桌面应用，用图形化界面承载 OpenClaw A
 
 ## 下载与更新
 
-当前发布渠道使用 GitHub Releases：
+当前发布渠道使用 GitHub Releases，但桌面应用内的自动更新通道已关闭，不会自动检查、下载、安装或弹出更新通知：
 
 - 发布页：[jolanisogilvi-spec/ThingoClaw Releases](https://github.com/jolanisogilvi-spec/ThingoClaw/releases)
 - Windows 安装包：`ThingoClaw-0.4.13-win-x64.exe`
 - 更新源：GitHub Releases，仓库 `jolanisogilvi-spec/ThingoClaw`
-- 更新方式：应用启动后按节流策略检查更新，发现新版本时先提示用户，由用户确认后再下载和安装
+- 更新方式：应用内不执行自动更新检查；如需升级，请手动下载新的安装包
 
 Windows 安装包以管理员权限安装。构建配置使用 `requireAdministrator` 和 NSIS per-machine 安装，适合需要写入系统安装目录或注册桌面入口的场景。
 
@@ -40,14 +40,14 @@ Windows 安装包以管理员权限安装。构建配置使用 `requireAdministr
 
 - 桌面化 OpenClaw：通过 Electron、React、Vite 和 TypeScript 提供本地 GUI。
 - 多会话对话：管理 OpenClaw 会话、运行状态、工具调用和历史记录。
-- Thingo AI 提供商：内置 `https://uniapi.thingo.com.cn/v1`，默认协议为 OpenAI Completions，默认模型为 `gpt-5.5`。
+- Thingo AI 提供商：内置国内模型和国外模型两个分组，均使用 `https://uniapi.thingo.com.cn/v1` 的 OpenAI Completions 兼容协议；旧的单一 Thingo 配置继续兼容。
 - 多模型配置：支持 OpenAI、OpenRouter、Claude、Gemini、Ollama、LM Studio、Custom 等提供商。
 - 技能系统：内置文档、表格、演示文稿、PDF、搜索、自我改进 Agent 等技能入口。
 - 计划任务：通过 Cron 页面管理定时任务和自动化执行。
 - Channels 通道：支持扩展消息通道和外部集成。
 - 模型用量统计：从 OpenClaw session transcript 的结构化 usage 记录中统计 token 与成本。
 - 文件与文档能力：支持文档预览、文件附件、Office/PDF 工作流和本地素材引用。
-- 更新与发布：使用 GitHub Releases 作为安装包和自动更新的唯一来源。
+- 更新与发布：使用 GitHub Releases 作为安装包发布来源，应用内自动更新已关闭。
 
 ## 运行流程
 
@@ -111,7 +111,7 @@ pnpm run package:win
 - `ThingoClaw-<version>-win-x64.exe.blockmap`
 - `latest.yml`
 
-自动更新依赖 `latest.yml` 和安装包资产，因此移动 tag、覆盖 Release 资产或重新构建安装包后，需要保证 Release 页面中的文件来自同一次构建。
+发布资产仍会生成 `latest.yml`，但当前版本的应用不会读取它执行自动更新。移动 tag、覆盖 Release 资产或重新构建安装包后，仍需要保证 Release 页面中的文件来自同一次构建。
 
 ## 配置与数据
 

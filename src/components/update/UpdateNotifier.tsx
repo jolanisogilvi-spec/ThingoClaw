@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import { useUpdateStore } from '@/stores/update';
 import { UpdateToast } from './UpdateToast';
+import { APP_UPDATES_ENABLED } from '@shared/update-config';
 
 const AVAILABLE_TOAST_ID = 'clawx-update-available';
 const DOWNLOADED_TOAST_ID = 'clawx-update-downloaded';
@@ -24,6 +25,8 @@ export function UpdateNotifier() {
   const lastDownloadedVersionRef = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!APP_UPDATES_ENABLED) return;
+
     const version = updateInfo?.version || t('updates.toast.unknownVersion');
     const dismissLabel = t('updates.action.later');
 
@@ -98,6 +101,8 @@ export function UpdateNotifier() {
       );
     }
   }, [downloadUpdate, installUpdate, status, t, updateInfo?.version]);
+
+  if (!APP_UPDATES_ENABLED) return null;
 
   return null;
 }

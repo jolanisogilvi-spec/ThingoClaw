@@ -16,6 +16,10 @@
   "aiProviders": {
     "title": "AI Providers",
     "description": "Configure your AI model providers and API keys",
+    "groups": {
+      "domestic": "Thingo domestic models",
+      "international": "Thingo international models"
+    },
     "overview": {
       "title": "Provider Accounts",
       "description": "A summary of the provider accounts and models currently configured.",

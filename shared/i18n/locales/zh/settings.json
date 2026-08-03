@@ -16,6 +16,10 @@
   "aiProviders": {
     "title": "AI 模型提供商",
     "description": "配置 AI 模型提供商和 API 密钥",
+    "groups": {
+      "domestic": "Thingo 国内模型",
+      "international": "Thingo 国外模型"
+    },
     "overview": {
       "title": "提供商账户",
       "description": "这里汇总当前已配置的 provider 账户与模型信息。",

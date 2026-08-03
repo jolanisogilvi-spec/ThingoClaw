@@ -1203,6 +1203,50 @@ function AddProviderDialog({
     return vendor.supportsMultipleAccounts || !existingVendorIds.has(type.id);
   });
 
+  const providerTypeGroups = [
+    {
+      key: 'domestic',
+      label: t('aiProviders.groups.domestic'),
+      types: availableTypes.filter((type) => type.group === 'domestic'),
+    },
+    {
+      key: 'international',
+      label: t('aiProviders.groups.international'),
+      types: availableTypes.filter((type) => type.group === 'international'),
+    },
+    {
+      key: 'other',
+      label: null,
+      types: availableTypes.filter((type) => !type.group),
+    },
+  ].filter((group) => group.types.length > 0);
+
+  const renderProviderType = (type: (typeof PROVIDER_TYPE_INFO)[number]) => (
+    <button
+      data-testid={`add-provider-type-${type.id}`}
+      key={type.id}
+      onClick={() => {
+        setSelectedType(type.id);
+        setName(type.id === 'custom' ? t('aiProviders.custom') : type.name);
+        setBaseUrl(type.defaultBaseUrl || '');
+        setModelId(type.defaultModelId || '');
+        setUserAgent('');
+        setShowAdvancedConfig(false);
+        setArkMode('apikey');
+      }}
+      className="p-4 rounded-2xl border border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-center group"
+    >
+      <div className="h-12 w-12 mx-auto mb-3 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-xl shadow-sm border border-black/5 dark:border-white/5 group-hover:scale-105 transition-transform">
+        {getProviderIconUrl(type.id) ? (
+          <img src={getProviderIconUrl(type.id)} alt={type.name} className={cn('h-6 w-6', shouldInvertInDark(type.id) && 'dark:invert')} />
+        ) : (
+          <span className="text-2xl">{type.icon}</span>
+        )}
+      </div>
+      <p className="font-medium text-meta">{type.id === 'custom' ? t('aiProviders.custom') : type.name}</p>
+    </button>
+  );
+
   const handleAdd = async () => {
     if (!selectedType) return;
 
@@ -1291,31 +1335,16 @@ function AddProviderDialog({
         </CardHeader>
         <CardContent className="overflow-y-auto flex-1 p-6">
           {!selectedType ? (
-            <div data-testid="add-provider-type-list" className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {availableTypes.map((type) => (
-                <button
-                  data-testid={`add-provider-type-${type.id}`}
-                  key={type.id}
-                  onClick={() => {
-                    setSelectedType(type.id);
-                    setName(type.id === 'custom' ? t('aiProviders.custom') : type.name);
-                    setBaseUrl(type.defaultBaseUrl || '');
-                    setModelId(type.defaultModelId || '');
-                    setUserAgent('');
-                    setShowAdvancedConfig(false);
-                    setArkMode('apikey');
-                  }}
-                  className="p-4 rounded-2xl border border-black/5 dark:border-white/5 hover:bg-black/5 dark:hover:bg-white/5 transition-colors text-center group"
-                >
-                  <div className="h-12 w-12 mx-auto mb-3 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-xl shadow-sm border border-black/5 dark:border-white/5 group-hover:scale-105 transition-transform">
-                    {getProviderIconUrl(type.id) ? (
-                      <img src={getProviderIconUrl(type.id)} alt={type.name} className={cn('h-6 w-6', shouldInvertInDark(type.id) && 'dark:invert')} />
-                    ) : (
-                      <span className="text-2xl">{type.icon}</span>
-                    )}
+            <div data-testid="add-provider-type-list" className="space-y-6">
+              {providerTypeGroups.map((group) => (
+                <section key={group.key} data-testid={`add-provider-group-${group.key}`} className="space-y-3">
+                  {group.label && (
+                    <h3 className="text-sm font-semibold text-foreground/80">{group.label}</h3>
+                  )}
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {group.types.map(renderProviderType)}
                   </div>
-                  <p className="font-medium text-meta">{type.id === 'custom' ? t('aiProviders.custom') : type.name}</p>
-                </button>
+                </section>
               ))}
             </div>
           ) : (

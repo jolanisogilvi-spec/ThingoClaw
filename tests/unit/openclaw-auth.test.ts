@@ -2283,3 +2283,97 @@ describe('batchSyncConfigFields', () => {
     expect(ssrfPolicy.allowIpv6UniqueLocalRange).toBe(false);
   });
 });
+
+describe('Thingo provider group migration', () => {
+  it('splits the legacy provider while preserving its model and endpoint', async () => {
+    const { ensureThingoProviderGroupsInConfig } = await import('@electron/utils/openclaw-auth');
+    const config: Record<string, unknown> = {
+      agents: {
+        defaults: {
+          model: {
+            primary: 'thingo/glm-5.2',
+            fallbacks: ['thingo/backup-model'],
+          },
+        },
+      },
+      models: {
+        providers: {
+          thingo: {
+            baseUrl: 'https://uniapi.thingo.com.cn/v1',
+            api: 'openai-completions',
+            apiKey: 'THINGO_API_KEY',
+            models: [{ id: 'glm-5.2', name: 'glm-5.2' }],
+          },
+        },
+      },
+      auth: {
+        profiles: {
+          'thingo:default': { type: 'api_key', provider: 'thingo', key: 'sk-test' },
+        },
+      },
+    };
+
+    expect(ensureThingoProviderGroupsInConfig(config, true)).toBe(true);
+
+    const providers = (config.models as Record<string, unknown>).providers as Record<string, Record<string, unknown>>;
+    expect(Object.keys(providers)).toEqual(['thingo-cn', 'thingo-global']);
+    expect(providers['thingo-cn'].baseUrl).toBe('https://uniapi.thingo.com.cn/v1');
+    expect(providers['thingo-global'].baseUrl).toBe('https://uniapi.thingo.com.cn/v1');
+    expect((providers['thingo-cn'].models as Array<Record<string, unknown>>).map((model) => model.id))
+      .toEqual(expect.arrayContaining(['deepseek-v4-pro', 'glm-5.2']));
+    expect((providers['thingo-global'].models as Array<Record<string, unknown>>).map((model) => model.id))
+      .toContain('gpt-5.5');
+    expect(((config.agents as Record<string, unknown>).defaults as Record<string, unknown>).model)
+      .toEqual({ primary: 'thingo-cn/glm-5.2', fallbacks: ['thingo-cn/backup-model'] });
+    expect((config.auth as Record<string, unknown>).profiles).toEqual({});
+    expect(ensureThingoProviderGroupsInConfig(config, true)).toBe(false);
+  });
+});
+
+describe('Thingo runtime provider migration', () => {
+  beforeEach(async () => {
+    vi.resetModules();
+    vi.restoreAllMocks();
+    await rm(testHome, { recursive: true, force: true });
+    await rm(testUserData, { recursive: true, force: true });
+  });
+
+  it('migrates the legacy config and mirrors the API key to both runtime providers', async () => {
+    await writeOpenClawJson({
+      agents: { defaults: { model: { primary: 'thingo/glm-5.2' } } },
+      models: {
+        providers: {
+          thingo: {
+            baseUrl: 'https://uniapi.thingo.com.cn/v1',
+            api: 'openai-completions',
+            apiKey: 'THINGO_API_KEY',
+            models: [{ id: 'glm-5.2', name: 'glm-5.2' }],
+          },
+        },
+      },
+    });
+    await writeAgentAuthProfiles('main', {
+      version: 1,
+      profiles: {
+        'thingo:default': { type: 'api_key', provider: 'thingo', key: 'sk-test' },
+      },
+    });
+
+    const { getOpenClawProvidersConfig } = await import('@electron/utils/openclaw-auth');
+    const result = await getOpenClawProvidersConfig();
+    const config = await readOpenClawJson();
+    const auth = await readAuthProfiles('main');
+    const providers = (config.models as Record<string, unknown>).providers as Record<string, Record<string, unknown>>;
+
+    expect(Object.keys(result.providers)).toEqual(['thingo-cn', 'thingo-global']);
+    expect(Object.keys(providers)).toEqual(['thingo-cn', 'thingo-global']);
+    expect((config.agents as Record<string, unknown>).defaults).toMatchObject({
+      model: { primary: 'thingo-cn/glm-5.2' },
+    });
+    expect(auth.profiles).toMatchObject({
+      'thingo-cn:default': { type: 'api_key', provider: 'thingo-cn', key: 'sk-test' },
+      'thingo-global:default': { type: 'api_key', provider: 'thingo-global', key: 'sk-test' },
+    });
+    expect(auth.profiles).not.toHaveProperty('thingo:default');
+  });
+});
