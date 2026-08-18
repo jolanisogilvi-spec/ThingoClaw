@@ -1,0 +1,162 @@
+name: Package macOS (Manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref to build (branch, tag, or SHA). Leave empty for current default ref.'
+        required: false
+        default: ''
+      release_tag:
+        description: 'Existing GitHub Release tag to upload to (for example v0.4.14). Leave empty to only keep the Actions artifact.'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  package-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+
+      - name: Prefer HTTPS for public GitHub git dependencies
+        run: |
+          git config --global "url.https://github.com/.insteadOf" "git@github.com:"
+          git config --global --add "url.https://github.com/.insteadOf" "ssh://git@github.com/"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate release tag
+        if: inputs.release_tag != ''
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          if [ "$RELEASE_TAG" != "v$VERSION" ]; then
+            echo "Release tag $RELEASE_TAG does not match package version $VERSION" >&2
+            exit 1
+          fi
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+
+      - name: Download macOS runtime binaries
+        run: |
+          pnpm run uv:download:mac
+          pnpm run agent-browser:download:mac
+
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /usr/local/share/powershell || true
+          rm -rf "$HOME/Library/Caches/electron-builder/dmg-builder"* || true
+          df -h /
+
+      - name: Build unsigned macOS packages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+        run: |
+          unset CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID
+          ulimit -n 65536 || true
+          pnpm run package
+          node scripts/run-electron-builder.mjs --mac --publish never -c.mac.notarize=false
+
+      - name: Verify packages and bundled Thingo skills
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          for ARCH in x64 arm64; do
+            DMG="release/ThingoClaw-${VERSION}-mac-${ARCH}.dmg"
+            ZIP="release/ThingoClaw-${VERSION}-mac-${ARCH}.zip"
+            test -s "$DMG"
+            test -s "$ZIP"
+            hdiutil verify "$DMG"
+          done
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+
+          const apps = fs.readdirSync('release', { withFileTypes: true })
+            .filter((entry) => entry.isDirectory() && entry.name.startsWith('mac'))
+            .map((entry) => path.join('release', entry.name, 'ThingoClaw.app'))
+            .filter((app) => fs.existsSync(app));
+
+          if (apps.length !== 2) {
+            throw new Error(`Expected two packaged apps, found ${apps.length}: ${apps.join(', ')}`);
+          }
+
+          for (const app of apps) {
+            const skillsRoot = path.join(app, 'Contents', 'Resources', 'resources', 'preinstalled-skills');
+            const lock = JSON.parse(fs.readFileSync(path.join(skillsRoot, '.preinstalled-lock.json'), 'utf8'));
+            const entries = lock.skills ?? [];
+            const thingoCount = entries.filter((skill) => skill.category === 'thingo').length;
+            if (thingoCount !== 36) {
+              throw new Error(`${app}: expected 36 Thingo skills, found ${thingoCount}`);
+            }
+            console.log(`${app}: verified ${thingoCount} Thingo skills`);
+          }
+          NODE
+
+          shasum -a 256 release/*.dmg release/*.zip > release/SHA256SUMS-mac.txt
+          cat release/SHA256SUMS-mac.txt
+
+      - name: Upload macOS build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-installers
+          path: |
+            release/*.dmg
+            release/*.zip
+            release/*.blockmap
+            release/latest-mac.yml
+            release/SHA256SUMS-mac.txt
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Upload packages to GitHub Release
+        if: inputs.release_tag != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          assets=()
+          while IFS= read -r file; do
+            assets+=("$file")
+          done < <(find release -maxdepth 1 -type f \( \
+            -name '*.dmg' -o \
+            -name '*.zip' -o \
+            -name '*.blockmap' -o \
+            -name 'latest-mac.yml' -o \
+            -name 'SHA256SUMS-mac.txt' \
+          \) -print | sort)
+
+          if [ "${#assets[@]}" -eq 0 ]; then
+            echo 'No macOS release assets found' >&2
+            exit 1
+          fi
+
+          gh release upload "$RELEASE_TAG" "${assets[@]}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
+
+          gh release view "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json assets \
+            --jq '.assets[] | select(.name | test("mac|SHA256SUMS")) | [.name, .size, .state] | @tsv'
