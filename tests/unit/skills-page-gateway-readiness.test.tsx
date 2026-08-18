@@ -150,8 +150,9 @@ describe('Skills page gateway readiness', () => {
   it('filters the list via enabled and disabled buttons', async () => {
     gatewayState.status = { state: 'stopped', port: 18789 };
     skillsState.skills = [
-      { id: 'pdf', name: 'PDF', description: 'enabled skill', enabled: true, source: 'openclaw-managed' },
-      { id: 'xlsx', name: 'XLSX', description: 'disabled skill', enabled: false, source: 'openclaw-managed' },
+      { id: 'pdf', name: 'PDF', description: 'enabled skill', enabled: true, category: 'thingo', source: 'openclaw-managed' },
+      { id: 'xlsx', name: 'XLSX', description: 'disabled skill', enabled: false, category: 'thingo', source: 'openclaw-managed' },
+      { id: 'custom', name: 'Custom', description: 'uncategorized skill', enabled: true, source: 'openclaw-managed' },
     ];
 
     render(<Skills />);
@@ -163,10 +164,17 @@ describe('Skills page gateway readiness', () => {
 
     expect(screen.getByText('PDF')).toBeInTheDocument();
     expect(screen.getByText('XLSX')).toBeInTheDocument();
+    expect(screen.getByText('Custom')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByTestId('skills-filter-thingo'));
+    expect(screen.getByText('PDF')).toBeInTheDocument();
+    expect(screen.getByText('XLSX')).toBeInTheDocument();
+    expect(screen.queryByText('Custom')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('skills-filter-enabled'));
     expect(screen.getByText('PDF')).toBeInTheDocument();
     expect(screen.queryByText('XLSX')).not.toBeInTheDocument();
+    expect(screen.getByText('Custom')).toBeInTheDocument();
 
     fireEvent.click(screen.getByTestId('skills-filter-disabled'));
     expect(screen.queryByText('PDF')).not.toBeInTheDocument();

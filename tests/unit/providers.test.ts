@@ -16,31 +16,28 @@ import {
 } from '@electron/utils/provider-registry';
 
 describe('provider metadata', () => {
-  it('exposes Thingo domestic and international groups before the legacy provider', () => {
-    expect(PROVIDER_TYPES.slice(0, 2)).toEqual(['thingo-cn', 'thingo-global']);
-    expect(BUILTIN_PROVIDER_TYPES.slice(0, 2)).toEqual(['thingo-cn', 'thingo-global']);
+  it('exposes the Thingo aggregator before hidden legacy aliases', () => {
+    expect(PROVIDER_TYPES.slice(0, 3)).toEqual(['thingo', 'thingo-cn', 'thingo-global']);
+    expect(BUILTIN_PROVIDER_TYPES.slice(0, 3)).toEqual(['thingo', 'thingo-cn', 'thingo-global']);
     expect(PROVIDER_TYPE_INFO[0]).toMatchObject({
-      id: 'thingo-cn',
-      name: 'Thingo 国内模型',
+      id: 'thingo',
+      name: 'Thingo 大模型聚合平台',
       requiresApiKey: true,
       defaultBaseUrl: 'https://uniapi.thingo.com.cn/v1',
+      defaultModelId: 'gpt-5.5',
       showModelId: true,
       group: 'domestic',
     });
     expect(PROVIDER_TYPE_INFO[0]).not.toHaveProperty('showBaseUrl');
     expect(PROVIDER_TYPE_INFO[0]).not.toHaveProperty('isOAuth');
-    expect(PROVIDER_TYPE_INFO[1]).toMatchObject({
-      id: 'thingo-global',
-      name: 'Thingo 国外模型',
-      defaultModelId: 'gpt-5.5',
-      group: 'international',
-    });
-    expect(PROVIDER_TYPE_INFO.find((provider) => provider.id === 'thingo')).toMatchObject({
+    expect(PROVIDER_TYPE_INFO.find((provider) => provider.id === 'thingo-cn')).toMatchObject({
       hidden: true,
     });
-    expect(getProviderEnvVar('thingo-cn')).toBe('THINGO_API_KEY');
-    expect(getProviderEnvVars('thingo-global')).toEqual(['THINGO_API_KEY']);
-    expect(getProviderConfig('thingo-cn')).toEqual({
+    expect(PROVIDER_TYPE_INFO.find((provider) => provider.id === 'thingo-global')).toMatchObject({
+      hidden: true,
+    });
+    expect(getProviderEnvVar('thingo')).toBe('THINGO_API_KEY');
+    expect(getProviderConfig('thingo')).toEqual({
       baseUrl: 'https://uniapi.thingo.com.cn/v1',
       api: 'openai-completions',
       apiKeyEnv: 'THINGO_API_KEY',
@@ -90,7 +87,7 @@ describe('provider metadata', () => {
 
   it('keeps builtin provider sources in sync', () => {
     expect(BUILTIN_PROVIDER_TYPES).toEqual(
-      expect.arrayContaining(['thingo-cn', 'thingo-global', 'thingo', 'anthropic', 'openai', 'google', 'openrouter', 'ark', 'moonshot', 'siliconflow', 'minimax-portal', 'minimax-portal-cn', 'modelstudio', 'ollama'])
+      expect.arrayContaining(['thingo', 'anthropic', 'openai', 'google', 'openrouter', 'ark', 'moonshot', 'siliconflow', 'minimax-portal', 'minimax-portal-cn', 'modelstudio', 'ollama'])
     );
   });
 

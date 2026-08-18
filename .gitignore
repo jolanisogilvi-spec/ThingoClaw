@@ -59,6 +59,7 @@ tests/fixtures/transcripts/
 *.rpm
 
 resources/bin
+resources/preinstalled-skills/
 
 # Secrets
 *.p12

@@ -2284,31 +2284,37 @@ describe('batchSyncConfigFields', () => {
   });
 });
 
-describe('Thingo provider group migration', () => {
-  it('splits the legacy provider while preserving its model and endpoint', async () => {
+describe('Thingo provider consolidation', () => {
+  it('consolidates split legacy providers while preserving their models and endpoint', async () => {
     const { ensureThingoProviderGroupsInConfig } = await import('@electron/utils/openclaw-auth');
     const config: Record<string, unknown> = {
       agents: {
         defaults: {
           model: {
-            primary: 'thingo/glm-5.2',
-            fallbacks: ['thingo/backup-model'],
+            primary: 'thingo-cn/glm-5.2',
+            fallbacks: ['thingo-global/backup-model'],
           },
         },
       },
       models: {
         providers: {
-          thingo: {
+          'thingo-cn': {
             baseUrl: 'https://uniapi.thingo.com.cn/v1',
             api: 'openai-completions',
             apiKey: 'THINGO_API_KEY',
             models: [{ id: 'glm-5.2', name: 'glm-5.2' }],
           },
+          'thingo-global': {
+            baseUrl: 'https://uniapi.thingo.com.cn/v1',
+            api: 'openai-completions',
+            apiKey: 'THINGO_API_KEY',
+            models: [{ id: 'gpt-5.5', name: 'gpt-5.5' }],
+          },
         },
       },
       auth: {
         profiles: {
-          'thingo:default': { type: 'api_key', provider: 'thingo', key: 'sk-test' },
+          'thingo-cn:default': { type: 'api_key', provider: 'thingo-cn', key: 'sk-test' },
         },
       },
     };
@@ -2316,21 +2322,18 @@ describe('Thingo provider group migration', () => {
     expect(ensureThingoProviderGroupsInConfig(config, true)).toBe(true);
 
     const providers = (config.models as Record<string, unknown>).providers as Record<string, Record<string, unknown>>;
-    expect(Object.keys(providers)).toEqual(['thingo-cn', 'thingo-global']);
-    expect(providers['thingo-cn'].baseUrl).toBe('https://uniapi.thingo.com.cn/v1');
-    expect(providers['thingo-global'].baseUrl).toBe('https://uniapi.thingo.com.cn/v1');
-    expect((providers['thingo-cn'].models as Array<Record<string, unknown>>).map((model) => model.id))
-      .toEqual(expect.arrayContaining(['deepseek-v4-pro', 'glm-5.2']));
-    expect((providers['thingo-global'].models as Array<Record<string, unknown>>).map((model) => model.id))
-      .toContain('gpt-5.5');
+    expect(Object.keys(providers)).toEqual(['thingo']);
+    expect(providers.thingo.baseUrl).toBe('https://uniapi.thingo.com.cn/v1');
+    expect((providers.thingo.models as Array<Record<string, unknown>>).map((model) => model.id))
+      .toEqual(expect.arrayContaining(['gpt-5.5', 'deepseek-v4-pro', 'glm-5.2', 'backup-model']));
     expect(((config.agents as Record<string, unknown>).defaults as Record<string, unknown>).model)
-      .toEqual({ primary: 'thingo-cn/glm-5.2', fallbacks: ['thingo-cn/backup-model'] });
+      .toEqual({ primary: 'thingo/glm-5.2', fallbacks: ['thingo/backup-model'] });
     expect((config.auth as Record<string, unknown>).profiles).toEqual({});
     expect(ensureThingoProviderGroupsInConfig(config, true)).toBe(false);
   });
 });
 
-describe('Thingo runtime provider migration', () => {
+describe('Thingo runtime provider consolidation', () => {
   beforeEach(async () => {
     vi.resetModules();
     vi.restoreAllMocks();
@@ -2338,16 +2341,22 @@ describe('Thingo runtime provider migration', () => {
     await rm(testUserData, { recursive: true, force: true });
   });
 
-  it('migrates the legacy config and mirrors the API key to both runtime providers', async () => {
+  it('migrates split runtime providers and keeps one canonical API key', async () => {
     await writeOpenClawJson({
-      agents: { defaults: { model: { primary: 'thingo/glm-5.2' } } },
+      agents: { defaults: { model: { primary: 'thingo-cn/glm-5.2' } } },
       models: {
         providers: {
-          thingo: {
+          'thingo-cn': {
             baseUrl: 'https://uniapi.thingo.com.cn/v1',
             api: 'openai-completions',
             apiKey: 'THINGO_API_KEY',
             models: [{ id: 'glm-5.2', name: 'glm-5.2' }],
+          },
+          'thingo-global': {
+            baseUrl: 'https://uniapi.thingo.com.cn/v1',
+            api: 'openai-completions',
+            apiKey: 'THINGO_API_KEY',
+            models: [{ id: 'gpt-5.5', name: 'gpt-5.5' }],
           },
         },
       },
@@ -2355,7 +2364,7 @@ describe('Thingo runtime provider migration', () => {
     await writeAgentAuthProfiles('main', {
       version: 1,
       profiles: {
-        'thingo:default': { type: 'api_key', provider: 'thingo', key: 'sk-test' },
+        'thingo-cn:default': { type: 'api_key', provider: 'thingo-cn', key: 'sk-test' },
       },
     });
 
@@ -2365,15 +2374,15 @@ describe('Thingo runtime provider migration', () => {
     const auth = await readAuthProfiles('main');
     const providers = (config.models as Record<string, unknown>).providers as Record<string, Record<string, unknown>>;
 
-    expect(Object.keys(result.providers)).toEqual(['thingo-cn', 'thingo-global']);
-    expect(Object.keys(providers)).toEqual(['thingo-cn', 'thingo-global']);
+    expect(Object.keys(result.providers)).toEqual(['thingo']);
+    expect(Object.keys(providers)).toEqual(['thingo']);
     expect((config.agents as Record<string, unknown>).defaults).toMatchObject({
-      model: { primary: 'thingo-cn/glm-5.2' },
+      model: { primary: 'thingo/glm-5.2' },
     });
     expect(auth.profiles).toMatchObject({
-      'thingo-cn:default': { type: 'api_key', provider: 'thingo-cn', key: 'sk-test' },
-      'thingo-global:default': { type: 'api_key', provider: 'thingo-global', key: 'sk-test' },
+      'thingo:default': { type: 'api_key', provider: 'thingo', key: 'sk-test' },
     });
-    expect(auth.profiles).not.toHaveProperty('thingo:default');
+    expect(auth.profiles).not.toHaveProperty('thingo-cn:default');
+    expect(auth.profiles).not.toHaveProperty('thingo-global:default');
   });
 });

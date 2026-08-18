@@ -37,6 +37,7 @@ requiredRules:
   - capability-owner-resolution
   - active-config-guards
   - packaged-runtime-pruning-guards
+  - preinstalled-skill-integrity
 ---
 
 Plugin lifecycle management covers bundled and external plugins as one system with different source types. The core model has two layers:

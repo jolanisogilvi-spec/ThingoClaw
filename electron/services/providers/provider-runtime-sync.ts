@@ -217,17 +217,14 @@ export async function syncAllProviderAuthToRuntime(): Promise<void> {
   await migrateAllAgentAuthProfilesToSqlite();
   const accounts = await listProviderAccounts();
   for (const account of accounts) {
-    // The legacy Thingo account is migrated to two runtime provider keys by
-    // ensureThingoProviderGroups(). Do not write the old key back on startup
-    // while the cached account is waiting to be cleaned up by ProviderService.
-    if (account.vendorId === 'thingo') {
+    // Legacy split Thingo accounts should write to the new aggregator key
+    // until ProviderService removes their cached account entries.
+    if (account.vendorId === 'thingo-cn' || account.vendorId === 'thingo-global') {
       const legacySecret = await getProviderSecret(account.id);
       if (legacySecret?.type === 'api_key') {
-        await saveProviderKeyToOpenClaw('thingo-cn', legacySecret.apiKey);
-        await saveProviderKeyToOpenClaw('thingo-global', legacySecret.apiKey);
+        await saveProviderKeyToOpenClaw('thingo', legacySecret.apiKey);
       } else if (legacySecret?.type === 'local' && legacySecret.apiKey) {
-        await saveProviderKeyToOpenClaw('thingo-cn', legacySecret.apiKey);
-        await saveProviderKeyToOpenClaw('thingo-global', legacySecret.apiKey);
+        await saveProviderKeyToOpenClaw('thingo', legacySecret.apiKey);
       }
       continue;
     }

@@ -23,6 +23,7 @@ test.describe('Skills page gateway readiness', () => {
             name: 'PDF',
             description: 'Local PDF tools',
             enabled: true,
+            category: 'thingo',
             source: 'openclaw-managed',
             baseDir: '/tmp/.openclaw/skills/pdf',
           }, {
@@ -31,8 +32,17 @@ test.describe('Skills page gateway readiness', () => {
             name: 'XLSX',
             description: 'Local spreadsheet tools',
             enabled: false,
+            category: 'thingo',
             source: 'openclaw-managed',
             baseDir: '/tmp/.openclaw/skills/xlsx',
+          }, {
+            id: 'custom',
+            slug: 'custom',
+            name: 'Custom',
+            description: 'Uncategorized local skill',
+            enabled: true,
+            source: 'openclaw-managed',
+            baseDir: '/tmp/.openclaw/skills/custom',
           }],
         },
       },
@@ -42,12 +52,28 @@ test.describe('Skills page gateway readiness', () => {
     await expect(page.getByTestId('skills-page')).toBeVisible();
     await expect(page.getByRole('heading', { name: 'PDF' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'XLSX' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Custom' })).toBeVisible();
     await expect(page.getByTestId('skills-gateway-banner')).toHaveAttribute('data-state', 'stopped', { timeout: 3_500 });
     await expect(page.getByRole('button', { name: /Install Skills/i })).toHaveCount(0);
+
+    const filterOrder = await page.locator('[data-testid^="skills-filter-"]').evaluateAll((buttons) =>
+      buttons.map((button) => button.getAttribute('data-testid')),
+    );
+    expect(filterOrder).toEqual([
+      'skills-filter-thingo',
+      'skills-filter-enabled',
+      'skills-filter-disabled',
+    ]);
+
+    await page.getByTestId('skills-filter-thingo').click();
+    await expect(page.getByRole('heading', { name: 'PDF' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'XLSX' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Custom' })).toHaveCount(0);
 
     await page.getByTestId('skills-filter-enabled').click();
     await expect(page.getByRole('heading', { name: 'PDF' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'XLSX' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Custom' })).toBeVisible();
 
     await page.getByTestId('skills-filter-disabled').click();
     await expect(page.getByRole('heading', { name: 'PDF' })).toHaveCount(0);

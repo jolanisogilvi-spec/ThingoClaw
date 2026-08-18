@@ -27,7 +27,7 @@ async function ensureMainLayout(page: Parameters<typeof completeSetup>[0]): Prom
 }
 
 test.describe('provider lifecycle', () => {
-  test('shows separate Thingo domestic/international groups and limits the form to API key and model', async ({ page }) => {
+  test('shows one Thingo aggregator provider and limits the form to API key and model', async ({ page }) => {
     await ensureMainLayout(page);
 
     await page.getByTestId('sidebar-nav-models').click();
@@ -39,12 +39,13 @@ test.describe('provider lifecycle', () => {
     const domesticGroup = page.getByTestId('add-provider-group-domestic');
     const internationalGroup = page.getByTestId('add-provider-group-international');
     await expect(domesticGroup).toBeVisible();
-    await expect(internationalGroup).toBeVisible();
-    await expect(page.getByTestId('add-provider-type-thingo-cn')).toBeVisible();
-    await expect(page.getByTestId('add-provider-type-thingo-global')).toBeVisible();
-    await expect(domesticGroup.locator('[data-testid^="add-provider-type-"]').first()).toHaveAttribute('data-testid', 'add-provider-type-thingo-cn');
+    await expect(internationalGroup).toHaveCount(0);
+    await expect(page.getByTestId('add-provider-type-thingo')).toBeVisible();
+    await expect(page.getByTestId('add-provider-type-thingo-cn')).toHaveCount(0);
+    await expect(page.getByTestId('add-provider-type-thingo-global')).toHaveCount(0);
+    await expect(domesticGroup.locator('[data-testid^="add-provider-type-"]').first()).toHaveAttribute('data-testid', 'add-provider-type-thingo');
 
-    await page.getByTestId('add-provider-type-thingo-cn').click();
+    await page.getByTestId('add-provider-type-thingo').click();
     await expect(page.getByTestId('add-provider-api-key-input')).toBeVisible();
     await expect(page.getByTestId('add-provider-model-id-input')).toBeVisible();
     await expect(page.getByTestId('add-provider-base-url-input')).toHaveCount(0);

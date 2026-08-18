@@ -1,7 +1,7 @@
 export const PROVIDER_TYPES = [
+  'thingo',
   'thingo-cn',
   'thingo-global',
-  'thingo',
   'anthropic',
   'openai',
   'google',
@@ -19,9 +19,9 @@ export const PROVIDER_TYPES = [
 ] as const;
 
 export const BUILTIN_PROVIDER_TYPES = [
+  'thingo',
   'thingo-cn',
   'thingo-global',
-  'thingo',
   'anthropic',
   'openai',
   'google',

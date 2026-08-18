@@ -260,7 +260,7 @@ export function Skills() {
   const [installQuery, setInstallQuery] = useState('');
   const [installSheetOpen, setInstallSheetOpen] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
-  const [statusFilter, setStatusFilter] = useState<'all' | 'enabled' | 'disabled'>('all');
+  const [skillFilter, setSkillFilter] = useState<'all' | 'thingo' | 'enabled' | 'disabled'>('all');
   const [marketplaceAvailable, setMarketplaceAvailable] = useState(false);
 
   const gatewayRunning = gatewayStatus.state === 'running';
@@ -328,6 +328,7 @@ export function Skills() {
   }, []);
 
   const safeSkills = Array.isArray(skills) ? skills : [];
+  const thingoSkillsCount = safeSkills.filter((skill) => skill.category === 'thingo').length;
   const enabledSkillsCount = safeSkills.filter((skill) => skill.enabled).length;
   const disabledSkillsCount = safeSkills.filter((skill) => !skill.enabled).length;
   const filteredSkills = safeSkills.filter((skill) => {
@@ -338,9 +339,11 @@ export function Skills() {
       || skill.id.toLowerCase().includes(q)
       || (skill.slug || '').toLowerCase().includes(q)
       || (skill.author || '').toLowerCase().includes(q);
-    const matchesStatus = statusFilter === 'all'
-      || (statusFilter === 'enabled' ? skill.enabled : !skill.enabled);
-    return matchesSearch && matchesStatus;
+    const matchesFilter = skillFilter === 'all'
+      || (skillFilter === 'thingo'
+        ? skill.category === 'thingo'
+        : (skillFilter === 'enabled' ? skill.enabled : !skill.enabled));
+    return matchesSearch && matchesFilter;
   }).sort((a, b) => {
     if (a.enabled && !b.enabled) return -1;
     if (!a.enabled && b.enabled) return 1;
@@ -366,8 +369,8 @@ export function Skills() {
 
   const hasInstalledSkills = safeSkills.some(s => !s.isBundled);
 
-  const handleStatusFilterClick = useCallback((nextFilter: 'enabled' | 'disabled') => {
-    setStatusFilter((current) => (current === nextFilter ? 'all' : nextFilter));
+  const handleSkillFilterClick = useCallback((nextFilter: 'thingo' | 'enabled' | 'disabled') => {
+    setSkillFilter((current) => (current === nextFilter ? 'all' : nextFilter));
   }, []);
 
   const handleOpenSkillsFolder = useCallback(async () => {
@@ -526,11 +529,26 @@ export function Skills() {
               type="button"
               variant="ghost"
               size="sm"
-              data-testid="skills-filter-enabled"
-              onClick={() => handleStatusFilterClick('enabled')}
+              data-testid="skills-filter-thingo"
+              onClick={() => handleSkillFilterClick('thingo')}
               className={cn(
                 'h-8 rounded-full px-3 text-meta font-medium border shadow-none',
-                statusFilter === 'enabled'
+                skillFilter === 'thingo'
+                  ? 'bg-black/5 dark:bg-white/10 border-black/10 dark:border-white/10 text-foreground'
+                  : 'bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5',
+              )}
+            >
+              {t('filter.thingo', { count: thingoSkillsCount })}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              data-testid="skills-filter-enabled"
+              onClick={() => handleSkillFilterClick('enabled')}
+              className={cn(
+                'h-8 rounded-full px-3 text-meta font-medium border shadow-none',
+                skillFilter === 'enabled'
                   ? 'bg-black/5 dark:bg-white/10 border-black/10 dark:border-white/10 text-foreground'
                   : 'bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5',
               )}
@@ -542,10 +560,10 @@ export function Skills() {
               variant="ghost"
               size="sm"
               data-testid="skills-filter-disabled"
-              onClick={() => handleStatusFilterClick('disabled')}
+              onClick={() => handleSkillFilterClick('disabled')}
               className={cn(
                 'h-8 rounded-full px-3 text-meta font-medium border shadow-none',
-                statusFilter === 'disabled'
+                skillFilter === 'disabled'
                   ? 'bg-black/5 dark:bg-white/10 border-black/10 dark:border-white/10 text-foreground'
                   : 'bg-transparent border-transparent text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5',
               )}

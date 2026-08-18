@@ -12,6 +12,7 @@
     "filter": {
         "all": "Все ({{count}})",
         "builtIn": "Встроенные ({{count}})",
+        "thingo": "Thingo ({{count}})",
         "marketplace": "Маркетплейс ({{count}})",
         "enabledList": "Включено ({{count}})",
         "disabledList": "Отключено ({{count}})"

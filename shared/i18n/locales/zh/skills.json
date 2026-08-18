@@ -12,6 +12,7 @@
     "filter": {
         "all": "全部 ({{count}})",
         "builtIn": "内置 ({{count}})",
+        "thingo": "Thingo ({{count}})",
         "marketplace": "市场 ({{count}})",
         "enabledList": "已开启 ({{count}})",
         "disabledList": "已禁用 ({{count}})"

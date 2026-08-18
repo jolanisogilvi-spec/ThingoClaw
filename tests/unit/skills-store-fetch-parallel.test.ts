@@ -49,7 +49,7 @@ describe('skills store local-first fetch', () => {
 
     localDeferred.resolve({
       success: true,
-      skills: [{ id: 'pdf', name: 'PDF', description: 'local', enabled: true }],
+      skills: [{ id: 'pdf', name: 'PDF', description: 'local', enabled: true, category: 'thingo' }],
     });
 
     await expect(fetchPromise).resolves.toBe(true);
@@ -66,6 +66,7 @@ describe('skills store local-first fetch', () => {
         description: 'runtime',
         version: '2.0.0',
         enabled: true,
+        category: 'thingo',
       });
     });
   });

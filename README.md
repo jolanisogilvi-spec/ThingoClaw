@@ -30,7 +30,7 @@ ThingoClaw 是一个 Electron 桌面应用，用图形化界面承载 OpenClaw A
 当前发布渠道使用 GitHub Releases，但桌面应用内的自动更新通道已关闭，不会自动检查、下载、安装或弹出更新通知：
 
 - 发布页：[jolanisogilvi-spec/ThingoClaw Releases](https://github.com/jolanisogilvi-spec/ThingoClaw/releases)
-- Windows 安装包：`ThingoClaw-0.4.13-win-x64.exe`
+- Windows 安装包：`ThingoClaw-0.4.14-win-x64.exe`
 - 更新源：GitHub Releases，仓库 `jolanisogilvi-spec/ThingoClaw`
 - 更新方式：应用内不执行自动更新检查；如需升级，请手动下载新的安装包
 
@@ -40,9 +40,9 @@ Windows 安装包以管理员权限安装。构建配置使用 `requireAdministr
 
 - 桌面化 OpenClaw：通过 Electron、React、Vite 和 TypeScript 提供本地 GUI。
 - 多会话对话：管理 OpenClaw 会话、运行状态、工具调用和历史记录。
-- Thingo AI 提供商：内置国内模型和国外模型两个分组，均使用 `https://uniapi.thingo.com.cn/v1` 的 OpenAI Completions 兼容协议；旧的单一 Thingo 配置继续兼容。
+- Thingo AI 提供商：内置“Thingo 大模型聚合平台”，使用 `https://uniapi.thingo.com.cn/v1` 的 OpenAI Completions 兼容协议；旧版国内模型、国外模型和单一 Thingo 配置会自动迁移到该入口。
 - 多模型配置：支持 OpenAI、OpenRouter、Claude、Gemini、Ollama、LM Studio、Custom 等提供商。
-- 技能系统：内置文档、表格、演示文稿、PDF、搜索、自我改进 Agent 等技能入口。
+- 技能系统：除文档、表格、演示文稿、PDF、搜索和自我改进 Agent 外，安装包还内置 `Thingo` 分类的 36 个技能：Dashi PPT、青云影视、乘风视频四项业务技能及 DBSkill 2.18.15 的全部 30 项技能；全新安装默认开启，许可证和来源说明见 `resources/skills/THIRD_PARTY_NOTICES.md`。
 - 计划任务：通过 Cron 页面管理定时任务和自动化执行。
 - Channels 通道：支持扩展消息通道和外部集成。
 - 模型用量统计：从 OpenClaw session transcript 的结构化 usage 记录中统计 token 与成本。

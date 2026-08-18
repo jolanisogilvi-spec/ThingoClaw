@@ -862,11 +862,8 @@ async function writeOpenClawJson(config: Record<string, unknown>): Promise<void>
   await writeJsonFile(OPENCLAW_CONFIG_PATH, config);
 }
 
-const THINGO_LEGACY_PROVIDER_KEY = 'thingo';
-const THINGO_PROVIDER_GROUPS = [
-  { key: 'thingo-cn', defaultModelId: 'deepseek-v4-pro' },
-  { key: 'thingo-global', defaultModelId: 'gpt-5.5' },
-] as const;
+const THINGO_PROVIDER_KEY = 'thingo';
+const THINGO_LEGACY_PROVIDER_KEYS = ['thingo-cn', 'thingo-global'] as const;
 
 function firstNonEmptyString(...values: unknown[]): string | undefined {
   return values.find((value): value is string => typeof value === 'string' && value.trim().length > 0)?.trim();
@@ -885,87 +882,99 @@ function getAgentsDefaultModelConfig(config: Record<string, unknown>): Record<st
   return defaults && isPlainRecord(defaults.model) ? defaults.model : undefined;
 }
 
-/** Split the legacy Thingo provider entry into domestic and international groups. */
+/** Consolidate legacy Thingo provider entries into the single aggregator provider. */
 export function ensureThingoProviderGroupsInConfig(
   config: Record<string, unknown>,
   hasAuthProfile: boolean,
 ): boolean {
   const models = isPlainRecord(config.models) ? config.models : {};
   const providers = isPlainRecord(models.providers) ? models.providers : {};
-  const legacyEntry = isPlainRecord(providers[THINGO_LEGACY_PROVIDER_KEY])
-    ? providers[THINGO_LEGACY_PROVIDER_KEY]
+  const providerEntry = isPlainRecord(providers[THINGO_PROVIDER_KEY])
+    ? providers[THINGO_PROVIDER_KEY]
     : undefined;
   const domesticEntry = isPlainRecord(providers['thingo-cn']) ? providers['thingo-cn'] : undefined;
   const globalEntry = isPlainRecord(providers['thingo-global']) ? providers['thingo-global'] : undefined;
   const modelConfig = getAgentsDefaultModelConfig(config);
   const primaryModel = typeof modelConfig?.primary === 'string' ? modelConfig.primary : undefined;
-  const hasLegacyModelReference = primaryModel?.startsWith(`${THINGO_LEGACY_PROVIDER_KEY}/`) ?? false;
-  const hasAnyThingoConfig = Boolean(legacyEntry || domesticEntry || globalEntry);
+  const modelReferences = [
+    primaryModel,
+    ...(Array.isArray(modelConfig?.fallbacks) ? modelConfig.fallbacks : []),
+  ].filter((modelRef): modelRef is string => typeof modelRef === 'string');
+  const hasLegacyModelReference = modelReferences.some((modelRef) => (
+    THINGO_LEGACY_PROVIDER_KEYS.some((key) => modelRef.startsWith(`${key}/`))
+  ));
+  const hasAnyThingoConfig = Boolean(providerEntry || domesticEntry || globalEntry);
 
-  if (!legacyEntry && !hasLegacyModelReference && domesticEntry && globalEntry) {
+  if (providerEntry && !domesticEntry && !globalEntry && !hasLegacyModelReference) {
     return false;
   }
   if (!hasAnyThingoConfig && !hasLegacyModelReference && !hasAuthProfile) {
     return false;
   }
 
-  const sourceEntry: Record<string, unknown> = legacyEntry ?? domesticEntry ?? globalEntry ?? {};
+  const sourceEntry: Record<string, unknown> = providerEntry ?? domesticEntry ?? globalEntry ?? {};
   const baseUrl = firstNonEmptyString(
-    legacyEntry?.baseUrl,
+    providerEntry?.baseUrl,
     domesticEntry?.baseUrl,
     globalEntry?.baseUrl,
-    getProviderConfig('thingo-cn')?.baseUrl,
+    getProviderConfig(THINGO_PROVIDER_KEY)?.baseUrl,
   ) ?? 'https://uniapi.thingo.com.cn/v1';
   const api = firstNonEmptyString(
-    legacyEntry?.api,
+    providerEntry?.api,
     domesticEntry?.api,
     globalEntry?.api,
-    getProviderConfig('thingo-cn')?.api,
+    getProviderConfig(THINGO_PROVIDER_KEY)?.api,
   ) ?? 'openai-completions';
   const apiKeyEnv = firstNonEmptyString(
-    legacyEntry?.apiKey,
-    legacyEntry?.apiKeyEnv,
+    providerEntry?.apiKey,
+    providerEntry?.apiKeyEnv,
     domesticEntry?.apiKey,
     domesticEntry?.apiKeyEnv,
     globalEntry?.apiKey,
     globalEntry?.apiKeyEnv,
-    getProviderConfig('thingo-cn')?.apiKeyEnv,
+    getProviderConfig(THINGO_PROVIDER_KEY)?.apiKeyEnv,
   );
   const headers = isPlainRecord(sourceEntry.headers)
     ? sourceEntry.headers as Record<string, string>
     : undefined;
-  const legacyModelIds = getModelIdsFromProviderEntry(legacyEntry);
-  const primaryLegacyModelId = primaryModel?.startsWith(`${THINGO_LEGACY_PROVIDER_KEY}/`)
-    ? primaryModel.slice(THINGO_LEGACY_PROVIDER_KEY.length + 1)
+  const primaryLegacyKey = primaryModel && THINGO_LEGACY_PROVIDER_KEYS
+    .find((key) => primaryModel.startsWith(`${key}/`));
+  const primaryLegacyModelId = primaryModel && primaryLegacyKey
+    ? primaryModel.slice(primaryLegacyKey.length + 1)
     : undefined;
-  const domesticModelIds = [
-    getProviderDefaultModel('thingo-cn'),
-    ...legacyModelIds,
+  const legacyFallbackModelIds = Array.isArray(modelConfig?.fallbacks)
+    ? modelConfig.fallbacks
+      .filter((fallback): fallback is string => typeof fallback === 'string')
+      .map((fallback) => {
+        const legacyKey = THINGO_LEGACY_PROVIDER_KEYS.find((key) => fallback.startsWith(`${key}/`));
+        return legacyKey ? fallback.slice(legacyKey.length + 1) : undefined;
+      })
+      .filter((modelId): modelId is string => Boolean(modelId))
+    : [];
+  const modelIds = [
+    getProviderDefaultModel(THINGO_PROVIDER_KEY),
+    ...THINGO_LEGACY_PROVIDER_KEYS.map((key) => getProviderDefaultModel(key)),
+    ...getModelIdsFromProviderEntry(providerEntry),
+    ...getModelIdsFromProviderEntry(domesticEntry),
+    ...getModelIdsFromProviderEntry(globalEntry),
     primaryLegacyModelId,
+    ...legacyFallbackModelIds,
   ].filter((modelId): modelId is string => Boolean(modelId));
 
-  for (const group of THINGO_PROVIDER_GROUPS) {
-    const existingEntry: Record<string, unknown> | undefined = isPlainRecord(providers[group.key])
-      ? providers[group.key] as Record<string, unknown>
-      : undefined;
-    const modelIds = group.key === 'thingo-cn'
-      ? domesticModelIds
-      : [getProviderDefaultModel(group.key) ?? group.defaultModelId];
-    upsertOpenClawProviderEntry(config, group.key, {
-      baseUrl,
-      api,
-      apiKeyEnv,
-      headers: headers ?? (isPlainRecord(existingEntry?.headers)
-        ? existingEntry.headers as Record<string, string>
-        : undefined),
-      modelIds,
-      includeRegistryModels: true,
-      mergeExistingModels: true,
-      inferRuntimeModelInputs: true,
-    });
-  }
+  upsertOpenClawProviderEntry(config, THINGO_PROVIDER_KEY, {
+    baseUrl,
+    api,
+    apiKeyEnv,
+    headers,
+    modelIds,
+    includeRegistryModels: true,
+    mergeExistingModels: true,
+    inferRuntimeModelInputs: true,
+  });
 
-  delete providers[THINGO_LEGACY_PROVIDER_KEY];
+  for (const legacyKey of THINGO_LEGACY_PROVIDER_KEYS) {
+    delete providers[legacyKey];
+  }
   models.providers = providers;
   config.models = models;
 
@@ -973,17 +982,21 @@ export function ensureThingoProviderGroupsInConfig(
   const defaults = isPlainRecord(agents.defaults) ? agents.defaults : {};
   const nextModel = isPlainRecord(defaults.model) ? { ...defaults.model } : {};
   const currentPrimary = typeof nextModel.primary === 'string' ? nextModel.primary : undefined;
-  if (currentPrimary?.startsWith(`${THINGO_LEGACY_PROVIDER_KEY}/`)) {
-    nextModel.primary = `${THINGO_PROVIDER_GROUPS[0].key}/${currentPrimary.slice(THINGO_LEGACY_PROVIDER_KEY.length + 1)}`;
-  } else if (!currentPrimary && (legacyEntry || hasAuthProfile)) {
-    nextModel.primary = `${THINGO_PROVIDER_GROUPS[0].key}/${getProviderDefaultModel('thingo-cn') ?? THINGO_PROVIDER_GROUPS[0].defaultModelId}`;
+  const legacyPrimaryKey = currentPrimary && THINGO_LEGACY_PROVIDER_KEYS
+    .find((key) => currentPrimary.startsWith(`${key}/`));
+  if (currentPrimary && legacyPrimaryKey) {
+    nextModel.primary = `${THINGO_PROVIDER_KEY}/${currentPrimary.slice(legacyPrimaryKey.length + 1)}`;
+  } else if (!currentPrimary && (hasAnyThingoConfig || hasAuthProfile)) {
+    nextModel.primary = `${THINGO_PROVIDER_KEY}/${getProviderDefaultModel(THINGO_PROVIDER_KEY) ?? 'gpt-5.5'}`;
   }
   if (Array.isArray(nextModel.fallbacks)) {
-    nextModel.fallbacks = nextModel.fallbacks.map((fallback) => (
-      typeof fallback === 'string' && fallback.startsWith(`${THINGO_LEGACY_PROVIDER_KEY}/`)
-        ? `${THINGO_PROVIDER_GROUPS[0].key}/${fallback.slice(THINGO_LEGACY_PROVIDER_KEY.length + 1)}`
-        : fallback
-    ));
+    nextModel.fallbacks = nextModel.fallbacks.map((fallback) => {
+      if (typeof fallback !== 'string') return fallback;
+      const legacyKey = THINGO_LEGACY_PROVIDER_KEYS.find((key) => fallback.startsWith(`${key}/`));
+      return legacyKey
+        ? `${THINGO_PROVIDER_KEY}/${fallback.slice(legacyKey.length + 1)}`
+        : fallback;
+    });
   }
   if (Object.keys(nextModel).length > 0) {
     defaults.model = nextModel;
@@ -995,7 +1008,7 @@ export function ensureThingoProviderGroupsInConfig(
   const authProfiles = auth && isPlainRecord(auth.profiles) ? auth.profiles : undefined;
   if (authProfiles) {
     for (const [profileId, profile] of Object.entries(authProfiles)) {
-      if (isPlainRecord(profile) && profile.provider === THINGO_LEGACY_PROVIDER_KEY) {
+      if (isPlainRecord(profile) && THINGO_LEGACY_PROVIDER_KEYS.includes(profile.provider as typeof THINGO_LEGACY_PROVIDER_KEYS[number])) {
         delete authProfiles[profileId];
       }
     }
@@ -1004,15 +1017,15 @@ export function ensureThingoProviderGroupsInConfig(
   return true;
 }
 
-/** Migrate the legacy Thingo config and mirror its key into both groups. */
+/** Migrate legacy Thingo provider entries into the single aggregator provider. */
 export async function ensureThingoProviderGroups(): Promise<void> {
   try {
-    const [legacyApiKey, domesticApiKey, globalApiKey] = await Promise.all([
-      getProviderApiKeyFromOpenClaw(THINGO_LEGACY_PROVIDER_KEY),
+    const [providerApiKey, domesticApiKey, globalApiKey] = await Promise.all([
+      getProviderApiKeyFromOpenClaw(THINGO_PROVIDER_KEY),
       getProviderApiKeyFromOpenClaw('thingo-cn'),
       getProviderApiKeyFromOpenClaw('thingo-global'),
     ]);
-    const sourceApiKey = legacyApiKey ?? domesticApiKey ?? globalApiKey;
+    const sourceApiKey = providerApiKey ?? domesticApiKey ?? globalApiKey;
     let configChanged = false;
 
     await withConfigLock(async () => {
@@ -1023,19 +1036,21 @@ export async function ensureThingoProviderGroups(): Promise<void> {
       }
     });
 
-    if (sourceApiKey) {
-      if (!domesticApiKey) await saveProviderKeyToOpenClaw('thingo-cn', sourceApiKey);
-      if (!globalApiKey) await saveProviderKeyToOpenClaw('thingo-global', sourceApiKey);
+    if (sourceApiKey && !providerApiKey) {
+      await saveProviderKeyToOpenClaw(THINGO_PROVIDER_KEY, sourceApiKey);
     }
-    if (legacyApiKey) {
-      await removeProviderKeyFromOpenClaw(THINGO_LEGACY_PROVIDER_KEY);
+    if (domesticApiKey) {
+      await removeProviderKeyFromOpenClaw('thingo-cn');
+    }
+    if (globalApiKey) {
+      await removeProviderKeyFromOpenClaw('thingo-global');
     }
 
     if (configChanged) {
-      console.log('Migrated the legacy Thingo provider into domestic and international groups');
+      console.log('Migrated legacy Thingo providers into the aggregator provider');
     }
   } catch (error) {
-    console.warn('Failed to migrate the legacy Thingo provider groups:', error);
+    console.warn('Failed to migrate legacy Thingo providers:', error);
   }
 }
 

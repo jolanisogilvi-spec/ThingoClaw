@@ -28,6 +28,7 @@ export interface LocalSkillRecord {
   config?: Record<string, unknown>;
   isCore?: boolean;
   isBundled?: boolean;
+  category?: string;
   source?: string;
   baseDir?: string;
   filePath?: string;
@@ -72,6 +73,7 @@ type ManifestMeta = {
 type PreinstalledMeta = {
   slug?: string;
   version?: string;
+  category?: string;
 };
 
 const MAX_SKILL_FILE_BYTES = 256_000;
@@ -230,6 +232,7 @@ async function readPreinstalledMeta(skillDir: string): Promise<PreinstalledMeta 
   return {
     slug: toStringValue(parsed.slug),
     version: toStringValue(parsed.version),
+    category: toStringValue(parsed.category),
   };
 }
 
@@ -295,6 +298,7 @@ async function inspectSkillDir(
       config,
       isCore: parsedManifest.isCore,
       isBundled,
+      category: preinstalledMeta?.category,
       source,
       baseDir: skillDirRealPath,
       filePath: manifestPath,

@@ -1,6 +1,6 @@
 {
     "name": "thingoclaw",
-    "version": "0.4.13",
+    "version": "0.4.14",
     "pnpm": {
         "onlyBuiltDependencies": [
             "@discordjs/opus",
@@ -152,6 +152,7 @@
         "https-proxy-agent": "^9.0.0",
         "i18next": "^25.8.11",
         "jsdom": "^28.1.0",
+        "jszip": "^3.10.1",
         "katex": "^0.16.45",
         "lru-cache": "^11.2.6",
         "lucide-react": "^0.563.0",

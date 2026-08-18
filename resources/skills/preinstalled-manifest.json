@@ -33,6 +33,30 @@
       "autoEnable": true
     },
     {
+      "slug": "dashi-ppt",
+      "repo": "chuspeeism/dashi-ppt-skill",
+      "repoPath": "skills/dashi-ppt",
+      "licenseRepoPath": "LICENSE",
+      "ref": "main",
+      "version": "0.4.11",
+      "category": "thingo",
+      "autoEnable": true
+    },
+    {
+      "slug": "qingyun-cine-skill",
+      "repo": "qingyunAGI/qingyun-cine-skill",
+      "repoPath": ".",
+      "ref": "7104a5b3be6fc832e25ed4beb352556c52242573",
+      "version": "7104a5b3be6fc832e25ed4beb352556c52242573",
+      "category": "thingo",
+      "autoEnable": true,
+      "sourceNotice": {
+        "title": "Qingyun Cine Skill",
+        "source": "https://github.com/qingyunAGI/qingyun-cine-skill",
+        "note": "The upstream repository does not publish a license file. Redistribution in ThingoClaw is based on authorization confirmed by the project owner."
+      }
+    },
+    {
       "slug": "find-skills",
       "repo": "vercel-labs/skills",
       "repoPath": "skills/find-skills",
@@ -55,6 +79,94 @@
       "ref": "main",
       "version": "main",
       "autoEnable": true
+    }
+  ],
+  "collections": [
+    {
+      "sourceType": "git",
+      "repo": "Agentchengfeng/chengfeng-videocut-skills",
+      "ref": "2e51611965af6e6b8baea3bfc82995b5c9e8f5ef",
+      "version": "0.10.8",
+      "rootPath": "plugins/chengfeng-videocut",
+      "category": "thingo",
+      "autoEnable": true,
+      "adapter": "chengfeng-videocut",
+      "licenseRepoPath": "LICENSE",
+      "noticeRepoPath": "NOTICE.md",
+      "sharedPaths": [
+        "references",
+        "runtime-requirements.json",
+        "scripts/ensure-running.cjs",
+        "scripts/ensure-runtime.cjs",
+        "scripts/ensure-studio.cjs",
+        "scripts/videocut-cli.cjs"
+      ],
+      "skills": [
+        {
+          "slug": "chengfeng-cut",
+          "repoPath": "skills/chengfeng-cut"
+        },
+        {
+          "slug": "chengfeng-subtitle",
+          "repoPath": "skills/chengfeng-subtitle"
+        },
+        {
+          "slug": "chengfeng-visual",
+          "repoPath": "skills/chengfeng-visual"
+        },
+        {
+          "slug": "chengfeng-export",
+          "repoPath": "skills/chengfeng-export"
+        }
+      ]
+    },
+    {
+      "sourceType": "localZip",
+      "archivePath": "tools/dbskill-v2.18.15.zip",
+      "archiveSha256": "6ABF7C460D1510473B3C90D5074163A1254011BF126DBAB945F4624EDC16746D",
+      "archiveRoot": "dbskill-main",
+      "versionFile": "VERSION",
+      "version": "2.18.15",
+      "category": "thingo",
+      "autoEnable": true,
+      "licensePath": "LICENSE",
+      "sourceNotice": {
+        "title": "DBSkill",
+        "source": "https://github.com/dontbesilent2025/dbskill",
+        "note": "Licensed under CC BY-NC 4.0. Inclusion in ThingoClaw is based on authorization confirmed by the project owner."
+      },
+      "skills": [
+        { "slug": "dbs", "archivePath": "skills/dbs" },
+        { "slug": "dbs-action", "archivePath": "skills/dbs-action" },
+        { "slug": "dbs-agent-migration", "archivePath": "skills/dbs-agent-migration" },
+        { "slug": "dbs-ai-check", "archivePath": "skills/dbs-ai-check" },
+        { "slug": "dbs-benchmark", "archivePath": "skills/dbs-benchmark" },
+        { "slug": "dbs-bridge", "archivePath": "skills/dbs-bridge" },
+        { "slug": "dbs-chatroom", "archivePath": "skills/dbs-chatroom" },
+        { "slug": "dbs-chatroom-austrian", "archivePath": "skills/dbs-chatroom-austrian" },
+        { "slug": "dbs-content", "archivePath": "skills/dbs-content" },
+        { "slug": "dbs-content-system", "archivePath": "skills/dbs-content-system" },
+        { "slug": "dbs-decision", "archivePath": "skills/dbs-decision" },
+        { "slug": "dbs-deconstruct", "archivePath": "skills/dbs-deconstruct" },
+        { "slug": "dbs-diagnosis", "archivePath": "skills/dbs-diagnosis" },
+        { "slug": "dbs-goal", "archivePath": "skills/dbs-goal" },
+        { "slug": "dbs-good-question", "archivePath": "skills/dbs-good-question" },
+        { "slug": "dbs-hook", "archivePath": "skills/dbs-hook" },
+        { "slug": "dbs-knowledge", "archivePath": "skills/dbs-knowledge" },
+        { "slug": "dbs-learning", "archivePath": "skills/dbs-learning" },
+        { "slug": "dbs-report", "archivePath": "skills/dbs-report" },
+        { "slug": "dbs-resonate", "archivePath": "skills/dbs-resonate" },
+        { "slug": "dbs-restore", "archivePath": "skills/dbs-restore" },
+        { "slug": "dbs-save", "archivePath": "skills/dbs-save" },
+        { "slug": "dbs-script-flow", "archivePath": "skills/dbs-script-flow" },
+        { "slug": "dbs-skill-cleaner", "archivePath": "skills/dbs-skill-cleaner" },
+        { "slug": "dbs-slowisfast", "archivePath": "skills/dbs-slowisfast" },
+        { "slug": "dbs-spread", "archivePath": "skills/dbs-spread" },
+        { "slug": "dbs-standard-answer", "archivePath": "skills/dbs-standard-answer" },
+        { "slug": "dbs-update", "archivePath": "skills/dbs-update" },
+        { "slug": "dbs-wechat-html", "archivePath": "skills/dbs-wechat-html" },
+        { "slug": "dbs-xhs-title", "archivePath": "skills/dbs-xhs-title" }
+      ]
     }
   ]
 }

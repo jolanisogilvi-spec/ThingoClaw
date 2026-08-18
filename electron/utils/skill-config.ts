@@ -9,8 +9,8 @@ import { readFile, writeFile, access, mkdir, readdir, rm } from 'fs/promises';
 import { existsSync } from 'fs';
 import { constants } from 'fs';
 import { join } from 'path';
-import { homedir } from 'os';
-import { getOpenClawDir, getOpenClawResolvedDir, getResourcesDir } from './paths';
+import { homedir } from 'node:os';
+import { getOpenClawDir, getOpenClawResolvedDir, getOpenClawSkillsDir, getResourcesDir } from './paths';
 import { logger } from './logger';
 import { cpAsyncSafe } from './plugin-install';
 import { withConfigLock } from './config-mutex';
@@ -37,11 +37,18 @@ interface OpenClawConfig {
 interface PreinstalledSkillSpec {
     slug: string;
     version?: string;
+    category?: string;
     autoEnable?: boolean;
 }
 
 interface PreinstalledManifest {
     skills?: PreinstalledSkillSpec[];
+    collections?: Array<{
+        version?: string;
+        category?: string;
+        autoEnable?: boolean;
+        skills?: PreinstalledSkillSpec[];
+    }>;
 }
 
 interface PreinstalledLockEntry {
@@ -58,6 +65,7 @@ interface PreinstalledMarker {
     slug: string;
     version: string;
     installedAt: string;
+    category?: string;
 }
 
 async function fileExists(p: string): Promise<boolean> {
@@ -374,10 +382,18 @@ async function readPreinstalledManifest(): Promise<PreinstalledSkillSpec[]> {
     try {
         const raw = await readFile(manifestPath, 'utf-8');
         const parsed = JSON.parse(raw) as PreinstalledManifest;
-        if (!Array.isArray(parsed.skills)) {
-            return [];
-        }
-        return parsed.skills.filter((s): s is PreinstalledSkillSpec => Boolean(s?.slug));
+        const standalone = Array.isArray(parsed.skills) ? parsed.skills : [];
+        const collections = Array.isArray(parsed.collections) ? parsed.collections : [];
+        const expanded = [
+            ...standalone,
+            ...collections.flatMap((collection) => (collection.skills || []).map((skill) => ({
+                ...skill,
+                version: skill.version ?? collection.version,
+                category: skill.category ?? collection.category,
+                autoEnable: skill.autoEnable ?? collection.autoEnable,
+            }))),
+        ];
+        return expanded.filter((s): s is PreinstalledSkillSpec => Boolean(s?.slug));
     } catch (error) {
         logger.warn('Failed to read preinstalled-skills manifest:', error);
         return [];
@@ -387,7 +403,9 @@ async function readPreinstalledManifest(): Promise<PreinstalledSkillSpec[]> {
 function resolvePreinstalledSkillsSourceRoot(): string | null {
     const candidates = [
         join(getResourcesDir(), 'preinstalled-skills'),
+        join(process.cwd(), 'resources', 'preinstalled-skills'),
         join(process.cwd(), 'build', 'preinstalled-skills'),
+        join(__dirname, '../../resources/preinstalled-skills'),
         join(__dirname, '../../build/preinstalled-skills'),
     ];
 
@@ -457,7 +475,7 @@ export async function ensurePreinstalledSkillsInstalled(): Promise<void> {
     }
     const lockVersions = await readPreinstalledLockVersions(sourceRoot);
 
-    const targetRoot = join(homedir(), '.openclaw', 'skills');
+    const targetRoot = getOpenClawSkillsDir();
     await mkdir(targetRoot, { recursive: true });
     const toEnable: string[] = [];
 
@@ -482,6 +500,19 @@ export async function ensurePreinstalledSkillsInstalled(): Promise<void> {
                 logger.info(`Skipping user-managed skill: ${spec.slug}`);
                 continue;
             }
+            if (spec.category && marker.category !== spec.category) {
+                try {
+                    const migratedMarker: PreinstalledMarker = {
+                        ...marker,
+                        source: 'clawx-preinstalled',
+                        category: spec.category,
+                    };
+                    await writeFile(markerPath, `${JSON.stringify(migratedMarker, null, 2)}\n`, 'utf-8');
+                    logger.info(`Updated preinstalled skill category marker: ${spec.slug} -> ${spec.category}`);
+                } catch (error) {
+                    logger.warn(`Failed to update preinstalled skill category marker ${spec.slug}:`, error);
+                }
+            }
             if (marker.version === desiredVersion) {
                 continue;
             }
@@ -497,6 +528,7 @@ export async function ensurePreinstalledSkillsInstalled(): Promise<void> {
                 slug: spec.slug,
                 version: desiredVersion,
                 installedAt: new Date().toISOString(),
+                category: spec.category,
             };
             await writeFile(markerPath, `${JSON.stringify(markerPayload, null, 2)}\n`, 'utf-8');
             if (spec.autoEnable) {

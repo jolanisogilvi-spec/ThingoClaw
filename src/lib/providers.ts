@@ -7,9 +7,9 @@
  */
 
 export const PROVIDER_TYPES = [
+  'thingo',
   'thingo-cn',
   'thingo-global',
-  'thingo',
   'anthropic',
   'openai',
   'google',
@@ -39,9 +39,9 @@ export type ProviderProtocol =
   | 'azure-openai-responses';
 
 export const BUILTIN_PROVIDER_TYPES = [
+  'thingo',
   'thingo-cn',
   'thingo-global',
-  'thingo',
   'anthropic',
   'openai',
   'google',
@@ -155,8 +155,21 @@ import { providerIcons } from '@/assets/providers';
 /** All supported provider types with UI metadata */
 export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
   {
+    id: 'thingo',
+    name: 'Thingo 大模型聚合平台',
+    icon: 'T',
+    placeholder: 'sk-...',
+    model: 'Thingo',
+    requiresApiKey: true,
+    defaultBaseUrl: 'https://uniapi.thingo.com.cn/v1',
+    defaultModelId: 'gpt-5.5',
+    showModelId: true,
+    modelIdPlaceholder: 'gpt-5.5',
+    group: 'domestic',
+  },
+  {
     id: 'thingo-cn',
-    name: 'Thingo 国内模型',
+    name: 'Thingo 旧版兼容配置',
     icon: 'T',
     placeholder: 'sk-...',
     model: 'Thingo CN',
@@ -165,27 +178,15 @@ export const PROVIDER_TYPE_INFO: ProviderTypeInfo[] = [
     defaultModelId: 'deepseek-v4-pro',
     showModelId: true,
     modelIdPlaceholder: 'deepseek-v4-pro',
+    hidden: true,
     group: 'domestic',
   },
   {
     id: 'thingo-global',
-    name: 'Thingo 国外模型',
+    name: 'Thingo 旧版兼容配置',
     icon: 'T',
     placeholder: 'sk-...',
     model: 'Thingo Global',
-    requiresApiKey: true,
-    defaultBaseUrl: 'https://uniapi.thingo.com.cn/v1',
-    defaultModelId: 'gpt-5.5',
-    showModelId: true,
-    modelIdPlaceholder: 'gpt-5.5',
-    group: 'international',
-  },
-  {
-    id: 'thingo',
-    name: 'Thingo 大模型聚合平台',
-    icon: 'T',
-    placeholder: 'sk-...',
-    model: 'Thingo',
     requiresApiKey: true,
     defaultBaseUrl: 'https://uniapi.thingo.com.cn/v1',
     defaultModelId: 'gpt-5.5',

@@ -107,7 +107,11 @@ describe('local skill service', () => {
 
     mkdirSync(join(managedRoot, 'docx'), { recursive: true });
     writeFileSync(join(managedRoot, 'docx', 'SKILL.md'), '---\nname: docx\ndescription: preinstalled hash version skill\n---\n');
-    writeFileSync(join(managedRoot, 'docx', '.clawx-preinstalled.json'), JSON.stringify({ slug: 'docx', version: 'da20c92503b2e8ff1cf28ca81a0df4673debdbf7' }));
+    writeFileSync(join(managedRoot, 'docx', '.clawx-preinstalled.json'), JSON.stringify({
+      slug: 'docx',
+      version: 'da20c92503b2e8ff1cf28ca81a0df4673debdbf7',
+      category: 'thingo',
+    }));
 
     mkdirSync(join(managedRoot, 'custom-skill'), { recursive: true });
     writeFileSync(join(managedRoot, 'custom-skill', 'SKILL.md'), '---\nname: custom-skill\ndescription: custom version skill\n---\n');
@@ -123,6 +127,7 @@ describe('local skill service', () => {
 
     expect(skills.find((skill) => skill.id === 'pdf')?.version).toBe('1.0.0');
     expect(skills.find((skill) => skill.id === 'docx')?.version).toBeUndefined();
+    expect(skills.find((skill) => skill.id === 'docx')?.category).toBe('thingo');
     expect(skills.find((skill) => skill.id === 'custom-skill')?.version).toBe('0.1.3');
   });
 });

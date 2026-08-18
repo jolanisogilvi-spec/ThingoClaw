@@ -66,19 +66,18 @@ async function migrateLegacyThingoStoreAccounts(
   accounts: ProviderAccount[],
   visibleAccounts: ProviderAccount[],
 ): Promise<void> {
-  const legacyAccounts = accounts.filter((account) => account.vendorId === 'thingo' || account.id === 'thingo');
+  const legacyAccounts = accounts.filter((account) => (
+    account.vendorId === 'thingo-cn' || account.vendorId === 'thingo-global'
+  ));
   if (legacyAccounts.length === 0) return;
 
   const sourceAccount = [...legacyAccounts].sort((left, right) => right.updatedAt.localeCompare(left.updatedAt))[0];
   const legacyApiKey = await getApiKey(sourceAccount.id);
-  const targetIds = ['thingo-cn', 'thingo-global'];
+  const targetId = 'thingo';
+  const targetApiKey = await getApiKey(targetId);
 
-  if (legacyApiKey) {
-    for (const targetId of targetIds) {
-      if (visibleAccounts.some((account) => account.id === targetId)) {
-        await storeApiKey(targetId, legacyApiKey);
-      }
-    }
+  if (legacyApiKey && !targetApiKey && visibleAccounts.some((account) => account.id === targetId)) {
+    await storeApiKey(targetId, legacyApiKey);
   }
 
   const currentDefaultId = await getDefaultProviderAccountId();
@@ -88,8 +87,8 @@ async function migrateLegacyThingoStoreAccounts(
   }
 
   if (currentDefaultId && legacyAccounts.some((account) => account.id === currentDefaultId)) {
-    if (visibleAccounts.some((account) => account.id === 'thingo-cn')) {
-      await setDefaultProviderAccount('thingo-cn');
+    if (visibleAccounts.some((account) => account.id === targetId)) {
+      await setDefaultProviderAccount(targetId);
     }
   }
 }

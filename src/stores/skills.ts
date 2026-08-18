@@ -72,6 +72,7 @@ function mapGatewaySkillToSkill(status: GatewaySkillStatus, existing?: Skill): S
     },
     isCore: Boolean((status.bundled && status.always) || existing?.isCore),
     isBundled: status.bundled ?? existing?.isBundled,
+    category: existing?.category,
     source: status.source || existing?.source,
     baseDir: status.baseDir || existing?.baseDir,
     filePath: status.filePath || existing?.filePath,

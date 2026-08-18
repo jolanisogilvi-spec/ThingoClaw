@@ -12,6 +12,7 @@
     "filter": {
         "all": "すべて ({{count}})",
         "builtIn": "内蔵 ({{count}})",
+        "thingo": "Thingo ({{count}})",
         "marketplace": "マーケットプレイス ({{count}})",
         "enabledList": "有効 ({{count}})",
         "disabledList": "無効 ({{count}})"
